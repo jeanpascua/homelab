@@ -16,7 +16,7 @@ Proxmox VE (bare metal)
 
 ## Remote Access
 
-Tailscale VPN mesh across four devices — laptop, phone, Ubuntu VM, Kali VM. Telus uses CGNAT so port forwarding isn't an option. Tailscale creates a WireGuard mesh instead. No open ports, no public exposure.
+Tailscale VPN mesh across four devices: laptop, phone, Ubuntu VM, Kali VM. Telus uses CGNAT so port forwarding isn't an option. Tailscale creates a WireGuard mesh instead. No open ports, no public exposure.
 
 ## Skills Practiced
 
@@ -31,4 +31,4 @@ Linux administration, virtualization (Proxmox/KVM), containerization (Docker), n
 
 ## Full Writeup
 
-Setup details, problems I ran into, and what I learned — [WRITEUP.md](./WRITEUP.md)
+Setup details, problems I ran into, and what I learned: [WRITEUP.md](./WRITEUP.md)
