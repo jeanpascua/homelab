@@ -1,6 +1,6 @@
 # Homelab
 
-Personal homelab built on a Lenovo M710q mini-PC ($110 total). Running Proxmox VE as the hypervisor with Ubuntu Server and Kali Linux VMs.
+Personal homelab built on a Lenovo M710q mini-PC for $110 CAD total. Running Proxmox VE as the hypervisor with Ubuntu Server and Kali Linux VMs.
 
 ## Stack
 
@@ -16,9 +16,9 @@ Proxmox VE (bare metal)
 
 ## Remote Access
 
-Tailscale VPN mesh across four devices — laptop, phone, Ubuntu VM, Kali VM.
+Tailscale VPN mesh across four devices — laptop, phone, Ubuntu VM, Kali VM. Telus uses CGNAT so port forwarding isn't an option. Tailscale creates a WireGuard mesh instead. No open ports, no public exposure.
 
-## Skills
+## Skills Practiced
 
 Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH), cybersecurity fundamentals (Nmap, Kali)
 
@@ -31,4 +31,4 @@ Linux administration, virtualization (Proxmox/KVM), containerization (Docker), n
 
 ## Full Writeup
 
-For setup details, problems I ran into, and what I learned — see [WRITEUP.md](./WRITEUP.md)
+Setup details, problems I ran into, and what I learned — [WRITEUP.md](./WRITEUP.md)
