@@ -25,7 +25,10 @@ Proxmox VE (Hypervisor, bare metal)
 │   └── Docker
 │       ├── Pi-hole         # DNS-level ad blocking
 │       ├── Nextcloud       # Self-hosted personal cloud storage
-│       └── Portainer       # Docker container management UI
+│       ├── Portainer       # Docker container management UI
+│       ├── Grafana         # Monitoring dashboards
+│       ├── Prometheus      # Metrics collection
+│       └── Node Exporter   # System metrics exporter
 └── Kali Linux VM           # Cybersecurity practice environment
 ```
 
@@ -57,6 +60,16 @@ This ended up being the remote access solution after the original plan didn't wo
 
 Second VM for cybersecurity practice. Used alongside TryHackMe rooms. Running tools like Nmap to scan the local network, discovering hosts, open ports, running services.
 
+### Monitoring
+
+Set up Grafana and Prometheus to monitor the server. Grafana is the dashboard, Prometheus collects the metrics, and Node Exporter is what actually pulls the system data like CPU, memory, disk, and network.
+
+Deployed all three as a stack through Portainer. The stack keeps them grouped together and makes it easy to manage.
+
+The tricky part was the dashboard. Grafana has a library of community dashboards you can import by ID. Dashboard 1860 is the standard one for Node Exporter. The problem was Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON file on my laptop and upload it manually instead.
+
+Once that was sorted the dashboard loaded with live data from the server.
+
 ---
 
 ## Problems I Ran Into
@@ -85,12 +98,13 @@ Tailscale was the fix. Instead of exposing ports publicly, it creates a private 
 - How to diagnose network issues and find workarounds
 - Linux administration through SSH on headless servers
 - How to enable hardware virtualization in BIOS
+- How to set up server monitoring with Grafana and Prometheus
 
 ---
 
 ## What's Next
 
-- [ ] Grafana + Prometheus for monitoring and dashboards
+- [x] Grafana + Prometheus for monitoring and dashboards
 - [ ] Nginx Proxy Manager internally (over Tailscale only)
 - [ ] Watchtower for automated container updates
 - [ ] Metasploitable VM for local pentesting
