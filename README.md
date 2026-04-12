@@ -10,7 +10,10 @@ Proxmox VE (bare metal)
 │   └── Docker
 │       ├── Pi-hole       # Network-wide DNS ad blocking
 │       ├── Nextcloud     # Self-hosted personal cloud
-│       └── Portainer     # Container management UI
+│       ├── Portainer     # Container management UI
+│       ├── Grafana       # Monitoring dashboards
+│       ├── Prometheus    # Metrics collection
+│       └── Node Exporter # System metrics exporter
 └── Kali Linux VM         # Cybersecurity practice
 ```
 
@@ -20,11 +23,11 @@ Tailscale VPN mesh across four devices: laptop, phone, Ubuntu VM, Kali VM. Telus
 
 ## Skills Practiced
 
-Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH), cybersecurity fundamentals (Nmap, Kali)
+Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH), cybersecurity fundamentals (Nmap, Kali), monitoring (Grafana, Prometheus)
 
 ## What's Next
 
-- [ ] Grafana + Prometheus monitoring
+- [x] Grafana + Prometheus monitoring
 - [ ] Nginx Proxy Manager (internal, over Tailscale)
 - [ ] Watchtower for automated container updates
 - [ ] Metasploitable VM for local pentesting
