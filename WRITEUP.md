@@ -49,11 +49,15 @@ Provisioned three VMs: Ubuntu Server for running services, Kali for security pra
 
 ### Docker on Ubuntu Server
 
-Installed Docker on the Ubuntu VM. Running three containers:
+Installed Docker on the Ubuntu VM. Running seven containers:
 
 * **Pi-hole** - DNS sinkhole. Blocks ads and trackers at the network level before they reach any device.
 * **Nextcloud** - self-hosted file storage. Same idea as Google Drive but on my own hardware.
 * **Portainer** - web UI for managing containers, images, and volumes.
+* **Grafana** - monitoring dashboards for the server.
+* **Prometheus** - metrics collection backend for Grafana.
+* **Node Exporter** - pulls system metrics from the host (CPU, memory, disk, network).
+* **Nginx Proxy Manager** - reverse proxy that maps `.home` domains to each container.
 
 ### Tailscale VPN
 
