@@ -17,23 +17,9 @@ Proxmox VE (bare metal)
 │   ├── Syncthing         # File sync across devices
 │   ├── Claude Code       # AI terminal assistant
 │   └── Gemini CLI        # AI terminal assistant (free tier)
-└── Kali Linux VM         # Cybersecurity practice
+├── Kali Linux VM         # Cybersecurity practice
+└── Metasploitable VM     # Intentionally vulnerable target for local pentesting
 ```
-
-## Second Brain
-
-Self-hosted personal knowledge base synced across all devices using Syncthing and Obsidian.
-
-```
-Samsung S25 (Obsidian)
-        ↕ Syncthing
-Ubuntu Server (~/second-brain)
-        ↕
-Claude Code / Gemini CLI
-```
-
-Notes captured on phone via Obsidian sync automatically to the homelab. Claude Code and Gemini CLI have full context over the vault for AI-assisted workflows — job applications, study notes, homelab documentation, and TryHackMe writeups.
-
 
 ## Remote Access
 
