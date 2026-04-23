@@ -32,7 +32,8 @@ Proxmox VE (Hypervisor, bare metal)
 │   ├── Syncthing           # File sync across devices
 │   ├── Claude Code         # AI terminal assistant
 │   └── Gemini CLI          # AI terminal assistant (free tier)
-└── Kali Linux VM           # Cybersecurity practice environment
+├── Kali Linux VM           # Cybersecurity practice environment
+└── Metasploitable VM       # Intentionally vulnerable target for local pentesting
 ```
 
 ---
@@ -43,7 +44,7 @@ Proxmox VE (Hypervisor, bare metal)
 
 Flashed Proxmox onto a USB drive and installed it bare metal on the M710q. Enabled Intel VT-x in BIOS first so VMs run with hardware acceleration. Proxmox sits on top of Debian and gives you a web UI for managing VMs.
 
-Provisioned two VMs: Ubuntu Server for running services and Kali for security practice. Both are headless. After initial setup, everything is managed over SSH.
+Provisioned three VMs: Ubuntu Server for running services, Kali for security practice, and Metasploitable as a local pentesting target. Both are headless. After initial setup, everything is managed over SSH.
 
 ### Docker on Ubuntu Server
 
