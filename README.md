@@ -1,6 +1,6 @@
 # Homelab
 
-Personal homelab built on a Lenovo M710q mini-PC for $110 CAD total. Running Proxmox VE as the hypervisor with Ubuntu Server and Kali Linux VMs.
+Personal homelab built on a Lenovo M710q mini-PC for $110 CAD total. Running Proxmox VE as the hypervisor with Ubuntu Server, Kali Linux, and Metasploitable VMs.
 
 ## Stack
 
@@ -42,7 +42,7 @@ Tailscale VPN mesh across four devices: laptop, phone, Ubuntu VM, Kali VM. Telus
 
 ## Skills Practiced
 
-Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH, reverse proxy), cybersecurity fundamentals (Nmap, Kali), monitoring (Grafana, Prometheus), file sync (Syncthing), AI terminal tooling (Claude Code, Gemini CLI)
+Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH, reverse proxy, Split DNS), cybersecurity fundamentals (Nmap, Kali, Metasploit), monitoring (Grafana, Prometheus), file sync (Syncthing), AI terminal tooling (Claude Code, Gemini CLI)
 
 ## What's Next
 
