@@ -181,6 +181,22 @@ Tailscale was the fix. Instead of exposing ports publicly, it creates a private 
 
 ---
 
+## Tailscale Split DNS for .home Domains Away from Home
+
+The `.home` domains work on the home network because Windows DNS is pointed at Pi-hole. The problem is when leaving home — Pi-hole is no longer reachable on the local IP, so `.home` stops resolving.
+
+The first attempt was setting Windows DNS manually to Pi-hole's Tailscale IP (`100.110.180.92`). `nslookup` worked but the Windows DNS resolver and browsers couldn't reach it. Tailscale routes DNS queries differently than direct queries, so this approach broke regular internet.
+
+The fix was Tailscale's **Split DNS** feature in the admin console (`login.tailscale.com/admin/dns`). Added Pi-hole (`100.110.180.92`) as a nameserver scoped to the `home` domain. Tailscale injects this DNS rule automatically on all connected devices — no manual DNS settings needed on Windows.
+
+How it works:
+* Queries for `*.home` → routed through Tailscale to Pi-hole
+* Everything else → normal system DNS, untouched
+
+Windows DNS stays on automatic (DHCP). Brave's secure DNS stays off. `.home` domains work at home and away from home as long as Tailscale is connected.
+
+---
+
 ## What I Learned
 
 * How to provision and manage VMs on a bare metal hypervisor
@@ -198,6 +214,7 @@ Tailscale was the fix. Instead of exposing ports publicly, it creates a private 
 * How reverse proxies work and how to set up clean internal domains with NPM and Pi-hole
 * How CGNAT affects what you can and can't proxy externally vs internally
 * How Proxmox authentication breaks behind a reverse proxy and how to work around it
+* How Tailscale Split DNS works and how to use it to extend local DNS to remote devices
 
 ---
 
