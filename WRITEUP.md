@@ -4,7 +4,7 @@
 
 I built this to get real hands-on infrastructure experience outside of coursework. The kind you can't get from reading about it.
 
-Lenovo M710q mini-PC, $110 CAD total. The goal was to actually run Linux, VMs, containers, and networking tools in a real environment instead of a cloud sandbox.
+Lenovo M710q mini-PC, $110 CAD total. Runs Proxmox as the hypervisor with Ubuntu Server and Kali Linux VMs. Everything managed over SSH.
 
 ---
 
@@ -13,7 +13,7 @@ Lenovo M710q mini-PC, $110 CAD total. The goal was to actually run Linux, VMs, c
 * **Server:** Lenovo M710q mini-PC (Intel Core i5-7500T, 8GB DDR4, 256GB NVMe SSD) : $85
 * **Networking:** TP-Link AV1000 powerline adapter kit : $25
 
-The mini-PC doesn't have built-in WiFi reliable enough for a server. The Proxmox web interface kept dropping and VMs were having network issues. Powerline adapters use the house's existing electrical wiring to carry the network signal. One adapter near the router, one at the server. Stable wired connection without running ethernet through the walls.
+The mini-PC has no built-in WiFi. A USB adapter worked at first but kept dropping the Proxmox interface and causing VM instability. Powerline adapters use the house's electrical wiring to carry the network signal — one near the router, one at the server. Stable wired connection without running ethernet through the walls.
 
 ---
 
@@ -43,9 +43,9 @@ Proxmox VE (Hypervisor, bare metal)
 
 ### Proxmox VE
 
-Flashed Proxmox onto a USB drive and installed it bare metal on the M710q. Enabled Intel VT-x in BIOS first so VMs run with hardware acceleration. Proxmox sits on top of Debian and gives you a web UI for managing VMs.
+Flashed Proxmox onto a USB drive and installed it bare metal on the M710q. Had to enable Intel VT-x in BIOS first so VMs run with hardware acceleration. Proxmox sits on top of Debian and gives you a web UI for managing VMs.
 
-Provisioned three VMs: Ubuntu Server for running services, Kali for security practice, and Metasploitable as a local pentesting target. All three are headless. After initial setup, everything is managed over SSH.
+Provisioned three VMs: Ubuntu Server for running services, Kali for security practice, and Metasploitable as a local pentesting target. All three are headless — after initial setup everything is managed over SSH.
 
 ### Docker on Ubuntu Server
 
@@ -61,29 +61,25 @@ Installed Docker on the Ubuntu VM. Running seven containers:
 
 ### Tailscale VPN
 
-Tailscale runs on all four devices: laptop, phone, Ubuntu VM, and Kali VM. It uses WireGuard under the hood and creates a mesh VPN so everything can reach each other regardless of what network I'm on.
-
-This ended up being the remote access solution after the original plan didn't work out (see below).
+Needed remote access without opening ports. Telus uses CGNAT so port forwarding doesn't work — the public IP on the modem is shared and inbound traffic never reaches your connection. Tailscale was the fix. It creates a WireGuard mesh between all four devices: laptop, phone, Ubuntu VM, Kali VM. Everything can reach each other regardless of what network I'm on. No open ports, no public exposure.
 
 ### Kali Linux VM
 
-Second VM for cybersecurity practice. Used alongside TryHackMe rooms. Running tools like Nmap to scan the local network, discovering hosts, open ports, running services.
+Second VM for cybersecurity practice. Used alongside TryHackMe rooms. Running tools like Nmap to scan the local network — discovering hosts, open ports, running services. Also set up Metasploitable as a local target to practice exploiting with Metasploit without touching anything outside my own network.
 
 ### Monitoring
 
-Set up Grafana and Prometheus to monitor the server. Grafana is the dashboard, Prometheus collects the metrics, and Node Exporter is what actually pulls the system data like CPU, memory, disk, and network.
+Wanted visibility into what the server was actually doing. Set up Grafana, Prometheus, and Node Exporter as a stack through Portainer. Node Exporter pulls system metrics, Prometheus collects them, Grafana displays them.
 
-Deployed all three as a stack through Portainer. The stack keeps them grouped together and makes it easy to manage.
+The dashboard was the annoying part. Grafana has a community dashboard library you can import by ID — 1860 is the standard Node Exporter one. But Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON on my laptop and upload it manually.
 
-The tricky part was the dashboard. Grafana has a library of community dashboards you can import by ID. Dashboard 1860 is the standard one for Node Exporter. The problem was Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON file on my laptop and upload it manually instead.
-
-Once that was sorted the dashboard loaded with live data from the server.
+Once that was sorted, live CPU, memory, disk, and network data showing up on the dashboard.
 
 ### Nginx Proxy Manager and Internal DNS
 
 Typing `192.168.1.79:8080` to reach Nextcloud gets old fast. Set up Nginx Proxy Manager as a reverse proxy so every service is accessible by a clean `.home` domain instead of an IP and port.
 
-Pi-hole handles the local DNS. Each `.home` domain gets a DNS record pointing to `192.168.1.79` where NPM is running. NPM then forwards the request to the right container.
+Pi-hole handles the local DNS. Each `.home` domain gets a DNS record pointing to `192.168.1.79` where NPM is running. NPM forwards the request to the right container.
 
 | URL | Service | Port |
 |---|---|---|
@@ -95,15 +91,15 @@ Pi-hole handles the local DNS. Each `.home` domain gets a DNS record pointing to
 | `npm.home` | Nginx Proxy Manager | 81 |
 | `pve.home` | Proxmox VE | 8006 |
 
-Deployed NPM as a new Docker stack through Portainer on ports 80, 81, and 443. Pi-hole was already running so no extra DNS server was needed — just added local DNS records in the Pi-hole admin panel.
+Deployed NPM as a new Docker stack through Portainer on ports 80, 81, and 443. Pi-hole was already running so no extra DNS server needed — just added the local DNS records in the Pi-hole admin panel.
 
 ### Problems I Ran Into
 
-**Windows ignoring the Pi-hole DNS** - Set the DNS manually in Windows network settings but the laptop kept using Telus DNS over IPv6. Fix was disabling IPv6 on the network adapter to force IPv4, which picked up Pi-hole.
+**Windows ignoring the Pi-hole DNS** - Set DNS manually in Windows network settings but the laptop kept using Telus DNS over IPv6. Fix was disabling IPv6 on the network adapter to force IPv4, which picked up Pi-hole.
 
 **Nextcloud blocking the new domain** - Nextcloud has a `trusted_domains` whitelist. Accessing it from `nextcloud.home` threw an "untrusted domain" error. Fixed by running `docker exec nextcloud php occ config:system:set trusted_domains 3 --value=nextcloud.home` to add it.
 
-**Proxmox authentication breaking through the proxy** - Proxmox uses ticket-based auth with cookies tied to the origin. Proxying it fully through NPM caused a "401: no ticket" error after login. Full reverse proxy for Proxmox is complex. The simpler fix was a redirect — `pve.home` redirects straight to `https://192.168.1.76:8006` using a `return 301` in the NPM custom nginx config. Proxmox handles auth itself, no proxy in the way.
+**Proxmox authentication breaking through the proxy** - Proxmox uses ticket-based auth with cookies tied to the origin. Proxying it through NPM caused a "401: no ticket" error after login. Full reverse proxy for Proxmox is complex. Simpler fix was a redirect — `pve.home` redirects straight to `https://192.168.1.76:8006` using `return 301` in the NPM nginx config. Proxmox handles auth itself, no proxy in the way.
 
 ---
 
@@ -141,7 +137,7 @@ Everything lives in `~/second-brain` on the Ubuntu Server:
 
 ### Syncthing
 
-Needed the folder on all three devices — phone, laptop, and server. Installed Syncthing on all three. It syncs automatically over the local network whenever devices are online. No cloud, no third party, stays on my own hardware.
+Needed the folder on all three devices — phone, laptop, and server. Installed Syncthing on all three. Syncs automatically over the local network whenever devices are online. No cloud, no third party, stays on my own hardware.
 
 ```
 Samsung S25 (Obsidian)
@@ -165,56 +161,39 @@ Installed Obsidian on the S25 and Windows laptop pointing at the synced folder. 
 
 ---
 
-## Problems I Ran Into (Original Setup)
-
-### WiFi Was Unreliable
-
-No built-in WiFi on the M710q. A USB adapter worked but kept causing dropped connections to the Proxmox interface and instability in the VMs. Powerline adapters fixed it immediately.
-
-### CGNAT Broke Port Forwarding
-
-The original plan was Nginx Proxy Manager as a reverse proxy for clean domain names instead of typing IP:port every time. That requires opening ports 80 and 443 on the router so external traffic can reach the server.
-
-Telus uses CGNAT (Carrier-Grade NAT) on residential connections. The public IP on the modem is shared across multiple customers. Inbound traffic never reaches your specific connection. Port forwarding doesn't work.
-
-Tailscale was the fix. Instead of exposing ports publicly, it creates a private encrypted tunnel between devices using WireGuard. I can reach Nextcloud, Pi-hole, and Portainer from anywhere through Tailscale. No port forwarding needed, no exposure to the public internet.
-
----
-
 ## Tailscale Split DNS for .home Domains Away from Home
 
-The `.home` domains work on the home network because Windows DNS is pointed at Pi-hole. The problem is when leaving home — Pi-hole is no longer reachable on the local IP, so `.home` stops resolving.
+The `.home` domains work at home because Windows DNS points at Pi-hole on the local IP. The problem is leaving home — Pi-hole isn't reachable and `.home` stops resolving.
 
-The first attempt was setting Windows DNS manually to Pi-hole's Tailscale IP (`100.110.180.92`). `nslookup` worked but the Windows DNS resolver and browsers couldn't reach it. Tailscale routes DNS queries differently than direct queries, so this approach broke regular internet.
+First attempt was setting Windows DNS manually to Pi-hole's Tailscale IP. `nslookup` worked but the Windows DNS resolver and browsers couldn't reach it — regular internet broke. Tailscale handles DNS queries differently than direct queries, so pointing Windows at a Tailscale IP doesn't work the same way.
 
-The fix was Tailscale's **Split DNS** feature in the admin console (`login.tailscale.com/admin/dns`). Added Pi-hole (`100.110.180.92`) as a nameserver scoped to the `home` domain. Tailscale injects this DNS rule automatically on all connected devices — no manual DNS settings needed on Windows.
+The fix was Tailscale's Split DNS feature in the admin console. Added Pi-hole as a nameserver scoped to the `home` domain. Tailscale automatically pushes this DNS rule to all connected devices — no manual settings needed on Windows.
 
-How it works:
-* Queries for `*.home` → routed through Tailscale to Pi-hole
-* Everything else → normal system DNS, untouched
+* Queries for `*.home` go through Tailscale to Pi-hole
+* Everything else uses normal system DNS, untouched
 
-Windows DNS stays on automatic (DHCP). Brave's secure DNS stays off. `.home` domains work at home and away from home as long as Tailscale is connected.
+Windows DNS stays on automatic. Brave's secure DNS stays off. `.home` domains work at home and away from home as long as Tailscale is connected.
 
 ---
 
 ## What I Learned
 
-* How to provision and manage VMs on a bare metal hypervisor
-* How containerization works in practice, isolated services on a single VM
-* How DNS works at the network level through Pi-hole
-* How CGNAT works and why ISPs use it
+* Provisioning and managing VMs on a bare metal hypervisor
+* How containerization works in practice — isolated services on a single VM
+* How DNS works at the network level, both for blocking and for local resolution
+* How CGNAT works and why port forwarding doesn't work on residential Telus
 * How WireGuard-based VPNs build mesh networks without a central server
-* How to diagnose network issues and find workarounds
+* Diagnosing network issues and finding workarounds when the obvious solution doesn't work
 * Linux administration through SSH on headless servers
 * How to enable hardware virtualization in BIOS
-* How to set up server monitoring with Grafana and Prometheus
-* How to set up peer-to-peer file sync with Syncthing
-* How AI terminal tools work and how to build persistent context workflows
-* How nvm works for managing Node versions on Linux
-* How reverse proxies work and how to set up clean internal domains with NPM and Pi-hole
-* How CGNAT affects what you can and can't proxy externally vs internally
-* How Proxmox authentication breaks behind a reverse proxy and how to work around it
-* How Tailscale Split DNS works and how to use it to extend local DNS to remote devices
+* Setting up server monitoring with Grafana, Prometheus, and Node Exporter
+* Peer-to-peer file sync with Syncthing across three devices
+* How AI terminal tools work and building persistent context workflows
+* Managing Node versions on Linux with nvm
+* How reverse proxies work and setting up clean internal domains with NPM and Pi-hole
+* Why CGNAT blocks external proxying and how to work around it internally
+* How Proxmox auth breaks behind a reverse proxy and the redirect workaround
+* How Tailscale Split DNS extends local DNS to remote devices without breaking regular internet
 
 ---
 
