@@ -23,12 +23,13 @@ The mini-PC doesn't have built-in WiFi reliable enough for a server. The Proxmox
 Proxmox VE (Hypervisor, bare metal)
 ├── Ubuntu Server VM
 │   ├── Docker
-│   │   ├── Pi-hole         # DNS-level ad blocking
-│   │   ├── Nextcloud       # Self-hosted personal cloud storage
-│   │   ├── Portainer       # Docker container management UI
-│   │   ├── Grafana         # Monitoring dashboards
-│   │   ├── Prometheus      # Metrics collection
-│   │   └── Node Exporter   # System metrics exporter
+│   │   ├── Pi-hole               # DNS-level ad blocking
+│   │   ├── Nextcloud             # Self-hosted personal cloud storage
+│   │   ├── Portainer             # Docker container management UI
+│   │   ├── Grafana               # Monitoring dashboards
+│   │   ├── Prometheus            # Metrics collection
+│   │   ├── Node Exporter         # System metrics exporter
+│   │   └── Nginx Proxy Manager   # Internal reverse proxy with .home domains
 │   ├── Syncthing           # File sync across devices
 │   ├── Claude Code         # AI terminal assistant
 │   └── Gemini CLI          # AI terminal assistant (free tier)
@@ -73,6 +74,32 @@ Deployed all three as a stack through Portainer. The stack keeps them grouped to
 The tricky part was the dashboard. Grafana has a library of community dashboards you can import by ID. Dashboard 1860 is the standard one for Node Exporter. The problem was Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON file on my laptop and upload it manually instead.
 
 Once that was sorted the dashboard loaded with live data from the server.
+
+### Nginx Proxy Manager and Internal DNS
+
+Typing `192.168.1.79:8080` to reach Nextcloud gets old fast. Set up Nginx Proxy Manager as a reverse proxy so every service is accessible by a clean `.home` domain instead of an IP and port.
+
+Pi-hole handles the local DNS. Each `.home` domain gets a DNS record pointing to `192.168.1.79` where NPM is running. NPM then forwards the request to the right container.
+
+| URL | Service | Port |
+|---|---|---|
+| `nextcloud.home` | Nextcloud | 8080 |
+| `pihole.home` | Pi-hole | 8053 |
+| `portainer.home` | Portainer | 9000 |
+| `grafana.home` | Grafana | 3000 |
+| `prometheus.home` | Prometheus | 9090 |
+| `npm.home` | Nginx Proxy Manager | 81 |
+| `pve.home` | Proxmox VE | 8006 |
+
+Deployed NPM as a new Docker stack through Portainer on ports 80, 81, and 443. Pi-hole was already running so no extra DNS server was needed — just added local DNS records in the Pi-hole admin panel.
+
+### Problems I Ran Into
+
+**Windows ignoring the Pi-hole DNS** - Set the DNS manually in Windows network settings but the laptop kept using Telus DNS over IPv6. Fix was disabling IPv6 on the network adapter to force IPv4, which picked up Pi-hole.
+
+**Nextcloud blocking the new domain** - Nextcloud has a `trusted_domains` whitelist. Accessing it from `nextcloud.home` threw an "untrusted domain" error. Fixed by running `docker exec nextcloud php occ config:system:set trusted_domains 3 --value=nextcloud.home` to add it.
+
+**Proxmox authentication breaking through the proxy** - Proxmox uses ticket-based auth with cookies tied to the origin. Proxying it fully through NPM caused a "401: no ticket" error after login. Full reverse proxy for Proxmox is complex. The simpler fix was a redirect — `pve.home` redirects straight to `https://192.168.1.76:8006` using a `return 301` in the NPM custom nginx config. Proxmox handles auth itself, no proxy in the way.
 
 ---
 
@@ -168,13 +195,16 @@ Tailscale was the fix. Instead of exposing ports publicly, it creates a private 
 * How to set up peer-to-peer file sync with Syncthing
 * How AI terminal tools work and how to build persistent context workflows
 * How nvm works for managing Node versions on Linux
+* How reverse proxies work and how to set up clean internal domains with NPM and Pi-hole
+* How CGNAT affects what you can and can't proxy externally vs internally
+* How Proxmox authentication breaks behind a reverse proxy and how to work around it
 
 ---
 
 ## What's Next
 
 * MCP server integration with Claude Code (GitHub, filesystem, web search)
-* Nginx Proxy Manager internally (over Tailscale only)
+* ~~Nginx Proxy Manager internally~~ — done, all services on `.home` domains
 * Watchtower for automated container updates
 * ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
 * Document TryHackMe rooms done with the Kali VM
