@@ -44,7 +44,7 @@ Proxmox VE (Hypervisor, bare metal)
 
 Flashed Proxmox onto a USB drive and installed it bare metal on the M710q. Enabled Intel VT-x in BIOS first so VMs run with hardware acceleration. Proxmox sits on top of Debian and gives you a web UI for managing VMs.
 
-Provisioned three VMs: Ubuntu Server for running services, Kali for security practice, and Metasploitable as a local pentesting target. Both are headless. After initial setup, everything is managed over SSH.
+Provisioned three VMs: Ubuntu Server for running services, Kali for security practice, and Metasploitable as a local pentesting target. All three are headless. After initial setup, everything is managed over SSH.
 
 ### Docker on Ubuntu Server
 
