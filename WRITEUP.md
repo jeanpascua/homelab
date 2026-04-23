@@ -109,22 +109,24 @@ Deployed NPM as a new Docker stack through Portainer on ports 80, 81, and 443. P
 
 ## Second Brain and AI Terminal Setup
 
-After getting the core infrastructure running, I wanted to actually use the homelab as part of my daily workflow rather than just let it sit there running services.
+The homelab was running but I wasn't really using it. Services just sitting there. I wanted it to actually be part of my workflow — something I interact with every day, not just maintain.
 
-### The Idea
+### The Problem with Browser AI Tools
 
-Browser-based AI tools lose context constantly. Every new chat starts from scratch. The terminal-based approach stores everything in files that persist across sessions. Claude Code and Gemini CLI both read a context file at startup so they always know who you are, what you're working on, and where your documents are.
+Every new chat starts from scratch. You explain your background, your project, what you're working on — and next session it's gone. I wanted something with memory that lives on my own hardware.
 
 ### AI Terminal Tools
 
-Installed two AI CLI tools on the Ubuntu Server:
+Installed two AI CLI tools directly on the Ubuntu Server:
 
 * **Gemini CLI** - Google's free terminal AI, installed via npm
 * **Claude Code** - Anthropic's terminal AI, requires Claude Pro
 
-Both tools live in `~/second-brain` and read context files at startup. Claude Code also has a job search agent saved at `.claude/agents/job-search-coach.md` with a full system prompt for resume writing, cover letters, and interview prep.
+Both read a context file at startup so they already know who I am, what my background is, and where everything is stored. No re-explaining every session. Claude Code also has a job search agent at `.claude/agents/job-search-coach.md` for resume writing, cover letters, and interview prep.
 
 ### Second Brain Folder
+
+Everything lives in `~/second-brain` on the Ubuntu Server:
 
 ```
 ~/second-brain/
@@ -137,11 +139,9 @@ Both tools live in `~/second-brain` and read context files at startup. Claude Co
 └── ideas/          # Capture notes from phone
 ```
 
-The `CLAUDE.md` and `GEMINI.md` files give each tool context about me, my background, and how the vault is structured so I don't have to re-explain things every session.
-
 ### Syncthing
 
-Installed Syncthing on the Ubuntu Server as a systemd user service. Also installed on my Samsung S25 and Windows laptop. All three devices sync the `~/second-brain` folder automatically over the local network.
+Needed the folder on all three devices — phone, laptop, and server. Installed Syncthing on all three. It syncs automatically over the local network whenever devices are online. No cloud, no third party, stays on my own hardware.
 
 ```
 Samsung S25 (Obsidian)
@@ -151,13 +151,9 @@ Ubuntu Server (~/second-brain)
 Windows Laptop
 ```
 
-Syncthing runs as a background service and syncs whenever devices are on the same network. No cloud, no third party, everything stays on my own hardware.
-
 ### Obsidian
 
-Installed Obsidian on both the S25 and Windows laptop, pointing to the synced `second-brain` folder as the vault. Obsidian treats the folder as a local markdown vault with a visual editor, graph view, and search.
-
-The workflow is: jot something down in Obsidian on my phone, Syncthing pushes it to the homelab, Claude Code picks it up automatically next session.
+Installed Obsidian on the S25 and Windows laptop pointing at the synced folder. Good mobile editor, graph view, search. The workflow is: write something on my phone, Syncthing pushes it to the server, Claude Code has it next session.
 
 ### Problems I Ran Into
 
