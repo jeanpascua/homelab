@@ -175,5 +175,5 @@ Tailscale was the fix. Instead of exposing ports publicly, it creates a private 
 * MCP server integration with Claude Code (GitHub, filesystem, web search)
 * Nginx Proxy Manager internally (over Tailscale only)
 * Watchtower for automated container updates
-* Metasploitable VM for local pentesting
+* ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
 * Document TryHackMe rooms done with the Kali VM

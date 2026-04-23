@@ -48,7 +48,7 @@ Linux administration, virtualization (Proxmox/KVM), containerization (Docker), n
 * MCP server integration with Claude Code
 * Nginx Proxy Manager (internal, over Tailscale)
 * Watchtower for automated container updates
-* Metasploitable VM for local pentesting
+* ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
 
 ## Full Writeup
 
