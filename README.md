@@ -16,6 +16,7 @@ Proxmox VE (bare metal)
 │   │   ├── Node Exporter         # System metrics exporter
 │   │   └── Nginx Proxy Manager   # Internal reverse proxy with clean .home URLs
 │   ├── Syncthing         # File sync across devices
+│   ├── Homelab MCP       # Custom MCP server — Claude Code controls the homelab
 │   ├── Claude Code       # AI terminal assistant
 │   └── Gemini CLI        # AI terminal assistant (free tier)
 ├── Kali Linux VM         # Cybersecurity practice
@@ -42,11 +43,11 @@ Tailscale VPN mesh across four devices: laptop, phone, Ubuntu VM, Kali VM. Telus
 
 ## Skills Practiced
 
-Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH, reverse proxy, Split DNS), cybersecurity fundamentals (Nmap, Kali, Metasploit), monitoring (Grafana, Prometheus), file sync (Syncthing), AI terminal tooling (Claude Code, Gemini CLI)
+Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH, reverse proxy, Split DNS), cybersecurity fundamentals (Nmap, Kali, Metasploit), monitoring (Grafana, Prometheus), file sync (Syncthing), AI terminal tooling (Claude Code, Gemini CLI), infrastructure automation (custom MCP server, Proxmox API, SSH orchestration)
 
 ## What's Next
 
-* MCP server integration with Claude Code
+* ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
 * ~~Nginx Proxy Manager (internal, over Tailscale)~~ — done, all services on `.home` domains
 * Watchtower for automated container updates
 * ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali

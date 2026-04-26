@@ -176,6 +176,26 @@ Windows DNS stays on automatic. Brave's secure DNS stays off. `.home` domains wo
 
 ---
 
+## MCP Server Integration
+
+The second brain setup was useful but still passive — Claude Code could read my notes but had no way to interact with the infrastructure. I wanted Claude to actually be able to control the homelab: check what VMs are running, install services, run commands, query Prometheus metrics.
+
+MCP (Model Context Protocol) is how Claude Code connects to external tools. Instead of just answering questions about the homelab, Claude can make API calls and run SSH commands against it.
+
+Built a custom MCP server called `homelab-mcp` (v1.6.0) in Python. It runs as a background process and exposes tools that Claude Code can call during a conversation. Installed it in a dedicated virtualenv under `~/arsenal/mcp-servers/`.
+
+What it can do:
+
+* **VM management** — list VMs, check status, start/stop/reboot via Proxmox API
+* **SSH execution** — run commands on any registered host without leaving the Claude session
+* **Service installation** — deploy new Docker services from templates
+* **Network discovery** — scan the network, map devices, detect infrastructure drift
+* **Monitoring** — query Prometheus metrics and service health
+
+The practical result: I can ask Claude to check if a container is down, deploy a new service, or run a diagnostic command and it actually does it. The homelab goes from something I SSH into manually to something I can manage through conversation.
+
+---
+
 ## What I Learned
 
 * Provisioning and managing VMs on a bare metal hypervisor
@@ -189,6 +209,7 @@ Windows DNS stays on automatic. Brave's secure DNS stays off. `.home` domains wo
 * Setting up server monitoring with Grafana, Prometheus, and Node Exporter
 * Peer-to-peer file sync with Syncthing across three devices
 * How AI terminal tools work and building persistent context workflows
+* How MCP (Model Context Protocol) works and building a custom server that gives Claude Code control over infrastructure
 * Managing Node versions on Linux with nvm
 * How reverse proxies work and setting up clean internal domains with NPM and Pi-hole
 * Why CGNAT blocks external proxying and how to work around it internally
@@ -199,7 +220,7 @@ Windows DNS stays on automatic. Brave's secure DNS stays off. `.home` domains wo
 
 ## What's Next
 
-* MCP server integration with Claude Code (GitHub, filesystem, web search)
+* ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
 * ~~Nginx Proxy Manager internally~~ — done, all services on `.home` domains
 * Watchtower for automated container updates
 * ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
