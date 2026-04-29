@@ -32,6 +32,7 @@ Proxmox VE (Hypervisor, bare metal)
 │   │   ├── Nginx Proxy Manager   # Internal reverse proxy with .home domains
 │   │   └── Watchtower            # Automated container image updates
 │   ├── Syncthing           # File sync across devices
+│   ├── Homelab MCP         # Custom MCP server — Claude Code controls the homelab
 │   ├── Claude Code         # AI terminal assistant
 │   └── Gemini CLI          # AI terminal assistant (free tier)
 ├── Kali Linux VM           # Cybersecurity practice environment
@@ -50,7 +51,7 @@ Provisioned three VMs: Ubuntu Server for running services, Kali for security pra
 
 ### Docker on Ubuntu Server
 
-Installed Docker on the Ubuntu VM. Running seven containers:
+Installed Docker on the Ubuntu VM. Running eight containers:
 
 * **Pi-hole** - DNS sinkhole. Blocks ads and trackers at the network level before they reach any device.
 * **Nextcloud** - self-hosted file storage. Same idea as Google Drive but on my own hardware.
@@ -73,7 +74,9 @@ Second VM for cybersecurity practice. Used alongside TryHackMe rooms. Running to
 
 Wanted visibility into what the server was actually doing. Set up Grafana, Prometheus, and Node Exporter as a stack through Portainer. Node Exporter pulls system metrics, Prometheus collects them, Grafana displays them.
 
-The dashboard was the annoying part. Grafana has a community dashboard library you can import by ID — 1860 is the standard Node Exporter one. But Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON on my laptop and upload it manually.
+Prometheus runs with a config file that tells it to scrape metrics from Node Exporter every 15 seconds. Grafana connects to Prometheus as a data source, then displays everything on a dashboard.
+
+The dashboard was the annoying part. Grafana has a community dashboard library you can import by ID — 1860 is the standard Node Exporter one. But Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON separately and import it via the Grafana API instead.
 
 Once that was sorted, live CPU, memory, disk, and network data showing up on the dashboard.
 
