@@ -123,7 +123,7 @@ Installed two AI CLI tools directly on the Ubuntu Server:
 * **Gemini CLI** - Google's free terminal AI, installed via npm
 * **Claude Code** - Anthropic's terminal AI, requires Claude Pro
 
-Both read a context file at startup so they already know who I am, what my background is, and where everything is stored. No re-explaining every session. Claude Code also has a job search agent at `.claude/agents/job-search-coach.md` for resume writing, cover letters, and interview prep.
+Both read a context file at startup so they already know who I am, what my background is, and where everything is stored. No re-explaining every session.
 
 ### Second Brain Folder
 
