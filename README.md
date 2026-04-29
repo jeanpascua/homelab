@@ -14,7 +14,8 @@ Proxmox VE (bare metal)
 │   │   ├── Grafana               # Monitoring dashboards
 │   │   ├── Prometheus            # Metrics collection
 │   │   ├── Node Exporter         # System metrics exporter
-│   │   └── Nginx Proxy Manager   # Internal reverse proxy with clean .home URLs
+│   │   ├── Nginx Proxy Manager   # Internal reverse proxy with clean .home URLs
+│   │   └── Watchtower            # Automated container image updates
 │   ├── Syncthing         # File sync across devices
 │   ├── Homelab MCP       # Custom MCP server — Claude Code controls the homelab
 │   ├── Claude Code       # AI terminal assistant
@@ -49,7 +50,7 @@ Linux administration, virtualization (Proxmox/KVM), containerization (Docker), n
 
 * ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
 * ~~Nginx Proxy Manager (internal, over Tailscale)~~ — done, all services on `.home` domains
-* Watchtower for automated container updates
+* ~~Watchtower for automated container updates~~ — done, running
 * ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
 
 ## Full Writeup

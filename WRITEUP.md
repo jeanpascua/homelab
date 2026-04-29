@@ -29,7 +29,8 @@ Proxmox VE (Hypervisor, bare metal)
 │   │   ├── Grafana               # Monitoring dashboards
 │   │   ├── Prometheus            # Metrics collection
 │   │   ├── Node Exporter         # System metrics exporter
-│   │   └── Nginx Proxy Manager   # Internal reverse proxy with .home domains
+│   │   ├── Nginx Proxy Manager   # Internal reverse proxy with .home domains
+│   │   └── Watchtower            # Automated container image updates
 │   ├── Syncthing           # File sync across devices
 │   ├── Claude Code         # AI terminal assistant
 │   └── Gemini CLI          # AI terminal assistant (free tier)
@@ -58,6 +59,7 @@ Installed Docker on the Ubuntu VM. Running seven containers:
 * **Prometheus** - metrics collection backend for Grafana.
 * **Node Exporter** - pulls system metrics from the host (CPU, memory, disk, network).
 * **Nginx Proxy Manager** - reverse proxy that maps `.home` domains to each container.
+* **Watchtower** - monitors running containers and automatically pulls updated images when they're available. No manual `docker pull` needed.
 
 ### Tailscale VPN
 
@@ -222,6 +224,6 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 
 * ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
 * ~~Nginx Proxy Manager internally~~ — done, all services on `.home` domains
-* Watchtower for automated container updates
+* ~~Watchtower for automated container updates~~ — done, running
 * ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
 * Document TryHackMe rooms done with the Kali VM
