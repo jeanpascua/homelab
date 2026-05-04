@@ -4,7 +4,7 @@
 
 I built this to get real hands-on infrastructure experience outside of coursework. The kind you can't get from reading about it.
 
-Lenovo M710q mini-PC, $110 CAD total. Runs Proxmox as the hypervisor with Ubuntu Server and Kali Linux VMs. Everything managed over SSH.
+Lenovo M710q mini-PC, $110 CAD total. Runs Proxmox as the hypervisor with Ubuntu Server, Kali Linux, and Metasploitable VMs. Everything managed over SSH.
 
 ---
 
@@ -21,10 +21,11 @@ The mini-PC has no built-in WiFi. A USB adapter worked at first but kept droppin
 
 ```
 Proxmox VE (Hypervisor, bare metal)
-├── Ubuntu Server VM
+├── Ubuntu Server VM (4 cores / 8GB RAM / 120GB disk)
 │   ├── Docker
-│   │   ├── Pi-hole               # DNS-level ad blocking
+│   │   ├── Pi-hole               # DNS-level ad blocking + .home resolution
 │   │   ├── Nextcloud             # Self-hosted personal cloud storage
+│   │   ├── OnlyOffice            # Document editing integrated with Nextcloud
 │   │   ├── Portainer             # Docker container management UI
 │   │   ├── Grafana               # Monitoring dashboards
 │   │   ├── Prometheus            # Metrics collection
@@ -51,10 +52,11 @@ Provisioned three VMs: Ubuntu Server for running services, Kali for security pra
 
 ### Docker on Ubuntu Server
 
-Installed Docker on the Ubuntu VM. Running eight containers:
+Installed Docker on the Ubuntu VM. Running nine containers:
 
 * **Pi-hole** - DNS sinkhole. Blocks ads and trackers at the network level before they reach any device.
 * **Nextcloud** - self-hosted file storage. Same idea as Google Drive but on my own hardware.
+* **OnlyOffice** - document editing server integrated with Nextcloud. Edit .docx, .xlsx, and .pptx directly in the browser.
 * **Portainer** - web UI for managing containers, images, and volumes.
 * **Grafana** - monitoring dashboards for the server.
 * **Prometheus** - metrics collection backend for Grafana.
@@ -127,17 +129,17 @@ Both read a context file at startup so they already know who I am, what my backg
 
 ### Second Brain Folder
 
-Everything lives in `~/second-brain` on the Ubuntu Server:
+Everything lives in `~/Sync/second-brain` on the Ubuntu Server:
 
 ```
-~/second-brain/
-├── CLAUDE.md       # Claude Code context file
-├── GEMINI.md       # Gemini CLI context file
-├── career/         # Resume, cover letters, job applications
-├── homelab/        # Infrastructure notes and configs
-├── school/         # Course notes and assignments
-├── tryhackme/      # Writeups and learning notes
-└── ideas/          # Capture notes from phone
+~/Sync/second-brain/
+├── CLAUDE.md           # Claude Code context file
+├── GEMINI.md           # Gemini CLI context file
+├── career/             # Resume, cover letters, job applications
+├── homelab/            # Infrastructure notes and configs
+├── security-writeups/  # TryHackMe rooms and homelab labs
+├── school/             # Course notes and assignments
+└── ideas/              # Capture notes from phone
 ```
 
 ### Syncthing
