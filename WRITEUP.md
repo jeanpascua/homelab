@@ -94,9 +94,7 @@ Pi-hole handles the local DNS. Each `.home` domain gets a DNS record pointing to
 | `pihole.home` | Pi-hole | 8053 |
 | `portainer.home` | Portainer | 9000 |
 | `grafana.home` | Grafana | 3000 |
-| `prometheus.home` | Prometheus | 9090 |
-| `npm.home` | Nginx Proxy Manager | 81 |
-| `pve.home` | Proxmox VE | 8006 |
+| `pve.home` | Proxmox VE (redirect) | 8006 |
 
 Deployed NPM as a new Docker stack through Portainer on ports 80, 81, and 443. Pi-hole was already running so no extra DNS server needed — just added the local DNS records in the Pi-hole admin panel.
 
@@ -149,7 +147,7 @@ Needed the folder on all three devices — phone, laptop, and server. Installed 
 ```
 Samsung S25 (Obsidian)
         ↕ Syncthing (TCP LAN)
-Ubuntu Server (~/second-brain)
+Ubuntu Server (~/Sync/second-brain)
         ↕ Syncthing (TCP LAN)
 Windows Laptop
 ```
@@ -280,12 +278,12 @@ Also bound Pi-hole to `[tailscale-ip]:53` (the Tailscale IP) so `.home` domains 
 
 ## HTTPS on .home Domains
 
-Generated a single self-signed wildcard cert covering all `.home` domains with a 10-year expiry:
+Generated a single self-signed cert covering all active `.home` domains with a 10-year expiry:
 
 ```bash
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -subj "/CN=homelab/O=Jean Homelab" \
-  -addext "subjectAltName=DNS:nextcloud.home,DNS:pihole.home,..."
+  -addext "subjectAltName=DNS:nextcloud.home,DNS:pihole.home,DNS:portainer.home,DNS:grafana.home,DNS:npm.home"
 ```
 
 Uploaded to NPM as a custom certificate, applied to each proxy host with Force SSL enabled. Installed the cert as a trusted CA on Windows and Android so no browser warnings.
