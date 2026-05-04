@@ -223,10 +223,84 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 
 ---
 
+## VM Resize
+
+Ubuntu Server VM was hitting CPU limits on 2 cores. Resized all three VMs to better use the node's resources:
+
+| VM | Before | After |
+|---|---|---|
+| Ubuntu Server | 2 cores / 6GB / 80GB | 4 cores / 8GB / 120GB |
+| Kali Linux | 2 cores / 4GB / 50GB | 2 cores / 4GB / 60GB |
+| Metasploitable | 1 core / 512MB / 16GB | 1 core / 1GB / 20GB |
+
+Used `pvesh` to update CPU and RAM config, `qm resize` for disk, then extended the Ubuntu filesystem inside the guest with `lvextend` and `resize2fs`.
+
+---
+
+## OnlyOffice + Nextcloud Integration
+
+Added OnlyOffice Document Server as a Docker container for editing `.docx`, `.xlsx`, and `.pptx` files directly inside Nextcloud.
+
+The integration required:
+* Installing the `onlyoffice` app in Nextcloud via `occ app:install`
+* Matching the JWT secret from OnlyOffice's `local.json` config
+* Setting the JWT header to `Authorization` (default, not `AuthorizationJwt`)
+* Setting `StorageUrl` to `http://192.168.1.79:8080/` so OnlyOffice can reach Nextcloud
+
+The tricky part was the JWT header — OnlyOffice was reaching Nextcloud and Nextcloud was returning 403 with "Download empty without jwt" in the logs. The fix was changing the header name from `AuthorizationJwt` to `Authorization`.
+
+---
+
+## DNS Overhaul — systemd-resolved + Split DNS
+
+The original DNS setup locked `/etc/resolv.conf` with `chattr +i` pointing at `8.8.8.8`. It worked for external DNS but broke Tailscale MagicDNS — `.ts.net` hostnames didn't resolve.
+
+Root cause chain:
+1. Pi-hole was bound to `0.0.0.0:53`, which claimed `127.0.0.53:53`
+2. That blocked systemd-resolved from starting its stub listener
+3. Tailscale's DNS proxy forwards general queries to `127.0.0.53` — but nothing was there, causing timeouts
+4. MagicDNS queries died silently
+
+Fix:
+* Rebind Pi-hole to `192.168.1.79:53` only — frees up `127.0.0.53` for systemd-resolved
+* Enable systemd-resolved with `8.8.8.8` as fallback
+* Re-enable `tailscale set --accept-dns=true` — Tailscale wires itself into systemd-resolved automatically
+* Result: `.ts.net` hostnames resolve via `tailscale0`, everything else goes through Pi-hole
+
+Also bound Pi-hole to `100.110.180.92:53` (the Tailscale IP) so `.home` domains and ad blocking work on all Tailscale devices from anywhere, not just the local network.
+
+---
+
+## HTTPS on .home Domains
+
+Generated a single self-signed wildcard cert covering all `.home` domains with a 10-year expiry:
+
+```bash
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+  -subj "/CN=homelab/O=Jean Homelab" \
+  -addext "subjectAltName=DNS:nextcloud.home,DNS:pihole.home,..."
+```
+
+Uploaded to NPM as a custom certificate, applied to each proxy host with Force SSL enabled. Installed the cert as a trusted CA on Windows and Android so no browser warnings.
+
+---
+
+## Daily Backups to Proxmox
+
+Set up a daily backup script that runs at 3am via cron. Uses Docker's alpine image to tar each volume, then SCP to Proxmox. Keeps 7 days of history and cleans up automatically.
+
+Volumes backed up: `nextcloud_data`, `pihole_data`, `dnsmasq_data`, `nginx-proxy-manager_npm_data`, `nginx-proxy-manager_npm_letsencrypt`.
+
+Passwordless SSH from ubuntu-server to Proxmox using the existing ed25519 key.
+
+---
+
 ## What's Next
 
 * ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
-* ~~Nginx Proxy Manager internally~~ — done, all services on `.home` domains
+* ~~Nginx Proxy Manager internally~~ — done, all services on `.home` domains with HTTPS
 * ~~Watchtower for automated container updates~~ — done, running
 * ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
+* ~~OnlyOffice document editing in Nextcloud~~ — done
+* ~~Daily backups to Proxmox~~ — done, 7-day retention
 * Document TryHackMe rooms done with the Kali VM
