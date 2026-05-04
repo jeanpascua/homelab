@@ -82,9 +82,9 @@ Once that was sorted, live CPU, memory, disk, and network data showing up on the
 
 ### Nginx Proxy Manager and Internal DNS
 
-Typing `192.168.1.79:8080` to reach Nextcloud gets old fast. Set up Nginx Proxy Manager as a reverse proxy so every service is accessible by a clean `.home` domain instead of an IP and port.
+Typing `[server-ip]:8080` to reach Nextcloud gets old fast. Set up Nginx Proxy Manager as a reverse proxy so every service is accessible by a clean `.home` domain instead of an IP and port.
 
-Pi-hole handles the local DNS. Each `.home` domain gets a DNS record pointing to `192.168.1.79` where NPM is running. NPM forwards the request to the right container.
+Pi-hole handles the local DNS. Each `.home` domain gets a DNS record pointing to `[server-ip]` where NPM is running. NPM forwards the request to the right container.
 
 | URL | Service | Port |
 |---|---|---|
@@ -104,7 +104,7 @@ Deployed NPM as a new Docker stack through Portainer on ports 80, 81, and 443. P
 
 **Nextcloud blocking the new domain** - Nextcloud has a `trusted_domains` whitelist. Accessing it from `nextcloud.home` threw an "untrusted domain" error. Fixed by running `docker exec nextcloud php occ config:system:set trusted_domains 3 --value=nextcloud.home` to add it.
 
-**Proxmox authentication breaking through the proxy** - Proxmox uses ticket-based auth with cookies tied to the origin. Proxying it through NPM caused a "401: no ticket" error after login. Full reverse proxy for Proxmox is complex. Simpler fix was a redirect — `pve.home` redirects straight to `https://192.168.1.76:8006` using `return 301` in the NPM nginx config. Proxmox handles auth itself, no proxy in the way.
+**Proxmox authentication breaking through the proxy** - Proxmox uses ticket-based auth with cookies tied to the origin. Proxying it through NPM caused a "401: no ticket" error after login. Full reverse proxy for Proxmox is complex. Simpler fix was a redirect — `pve.home` redirects straight to `https://[proxmox-ip]:8006` using `return 301` in the NPM nginx config. Proxmox handles auth itself, no proxy in the way.
 
 ---
 
@@ -220,6 +220,11 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 * Why CGNAT blocks external proxying and how to work around it internally
 * How Proxmox auth breaks behind a reverse proxy and the redirect workaround
 * How Tailscale Split DNS extends local DNS to remote devices without breaking regular internet
+* How systemd-resolved works as a stub listener and why it has to coexist with Pi-hole and Tailscale
+* Resizing a VM disk on Proxmox and extending the filesystem inside the guest with lvextend and resize2fs
+* Generating a self-signed wildcard cert with openssl and installing it as a trusted CA on Windows and Android
+* Automating Docker volume backups with cron, tar inside an alpine container, and SCP to Proxmox
+* How OnlyOffice JWT authentication works and why the header name matters for the Nextcloud integration
 
 ---
 
@@ -245,7 +250,7 @@ The integration required:
 * Installing the `onlyoffice` app in Nextcloud via `occ app:install`
 * Matching the JWT secret from OnlyOffice's `local.json` config
 * Setting the JWT header to `Authorization` (default, not `AuthorizationJwt`)
-* Setting `StorageUrl` to `http://192.168.1.79:8080/` so OnlyOffice can reach Nextcloud
+* Setting `StorageUrl` to `http://[server-ip]:8080/` so OnlyOffice can reach Nextcloud
 
 The tricky part was the JWT header — OnlyOffice was reaching Nextcloud and Nextcloud was returning 403 with "Download empty without jwt" in the logs. The fix was changing the header name from `AuthorizationJwt` to `Authorization`.
 
@@ -262,12 +267,12 @@ Root cause chain:
 4. MagicDNS queries died silently
 
 Fix:
-* Rebind Pi-hole to `192.168.1.79:53` only — frees up `127.0.0.53` for systemd-resolved
+* Rebind Pi-hole to `[server-ip]:53` only — frees up `127.0.0.53` for systemd-resolved
 * Enable systemd-resolved with `8.8.8.8` as fallback
 * Re-enable `tailscale set --accept-dns=true` — Tailscale wires itself into systemd-resolved automatically
 * Result: `.ts.net` hostnames resolve via `tailscale0`, everything else goes through Pi-hole
 
-Also bound Pi-hole to `100.110.180.92:53` (the Tailscale IP) so `.home` domains and ad blocking work on all Tailscale devices from anywhere, not just the local network.
+Also bound Pi-hole to `[tailscale-ip]:53` (the Tailscale IP) so `.home` domains and ad blocking work on all Tailscale devices from anywhere, not just the local network.
 
 ---
 

@@ -35,8 +35,8 @@ Nginx Proxy Manager runs as a reverse proxy with Pi-hole handling local DNS. All
 | `https://pihole.home` | Pi-hole |
 | `https://portainer.home` | Portainer |
 | `https://grafana.home` | Grafana |
-| `http://192.168.1.79:81` | Nginx Proxy Manager |
-| `http://192.168.1.76:8006` | Proxmox VE |
+| `http://[server-ip]:81` | Nginx Proxy Manager |
+| `http://[proxmox-ip]:8006` | Proxmox VE |
 
 ## Remote Access
 
