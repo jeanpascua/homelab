@@ -19,8 +19,7 @@ Proxmox VE (bare metal)
 │   │   └── Watchtower            # Automated container image updates
 │   ├── Syncthing         # File sync across devices
 │   ├── Homelab MCP       # Custom MCP server — Claude Code controls the homelab
-│   ├── Claude Code       # AI terminal assistant
-│   └── Gemini CLI        # AI terminal assistant (free tier)
+│   └── Claude Code       # AI terminal assistant
 ├── Kali Linux VM         # Cybersecurity practice
 └── Metasploitable VM     # Intentionally vulnerable target for local pentesting
 ```
@@ -48,7 +47,7 @@ Daily automated backups of all Docker volumes to Proxmox at 3am. Keeps 7 days of
 
 ## Skills Practiced
 
-Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH, reverse proxy, Split DNS, systemd-resolved), cybersecurity fundamentals (Nmap, Kali, Metasploit), monitoring (Grafana, Prometheus), file sync (Syncthing), AI terminal tooling (Claude Code, Gemini CLI), infrastructure automation (custom MCP server, Proxmox API, SSH orchestration), SSL/TLS (self-signed certs, CA installation)
+Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH, reverse proxy, Split DNS, systemd-resolved), cybersecurity fundamentals (Nmap, Kali, Metasploit), monitoring (Grafana, Prometheus), file sync (Syncthing), AI terminal tooling (Claude Code), infrastructure automation (custom MCP server, Proxmox API, SSH orchestration), SSL/TLS (self-signed certs, CA installation)
 
 ## What's Next
 

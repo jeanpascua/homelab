@@ -34,8 +34,7 @@ Proxmox VE (Hypervisor, bare metal)
 │   │   └── Watchtower            # Automated container image updates
 │   ├── Syncthing           # File sync across devices
 │   ├── Homelab MCP         # Custom MCP server — Claude Code controls the homelab
-│   ├── Claude Code         # AI terminal assistant
-│   └── Gemini CLI          # AI terminal assistant (free tier)
+│   └── Claude Code         # AI terminal assistant
 ├── Kali Linux VM           # Cybersecurity practice environment
 └── Metasploitable VM       # Intentionally vulnerable target for local pentesting
 ```
@@ -118,12 +117,7 @@ Every new chat starts from scratch. You explain your background, your project, w
 
 ### AI Terminal Tools
 
-Installed two AI CLI tools directly on the Ubuntu Server:
-
-* **Gemini CLI** - Google's free terminal AI, installed via npm
-* **Claude Code** - Anthropic's terminal AI, requires Claude Pro
-
-Both read a context file at startup so they already know who I am, what my background is, and where everything is stored. No re-explaining every session.
+Installed Claude Code directly on the Ubuntu Server. It reads a context file at startup so it already knows who I am, what my background is, and where everything is stored. No re-explaining every session.
 
 ### Second Brain Folder
 
@@ -132,10 +126,7 @@ Everything lives in `~/Sync/second-brain` on the Ubuntu Server:
 ```
 ~/Sync/second-brain/
 ├── CLAUDE.md           # Claude Code context file
-├── GEMINI.md           # Gemini CLI context file
 ├── career/             # Resume, cover letters, job applications
-├── homelab/            # Infrastructure notes and configs
-├── security-writeups/  # TryHackMe rooms and homelab labs
 ├── school/             # Course notes and assignments
 └── ideas/              # Capture notes from phone
 ```
@@ -157,8 +148,6 @@ Windows Laptop
 Installed Obsidian on the S25 and Windows laptop pointing at the synced folder. Good mobile editor, graph view, search. The workflow is: write something on my phone, Syncthing pushes it to the server, Claude Code has it next session.
 
 ### Problems I Ran Into
-
-**npm not found** - Ubuntu's apt repo ships an outdated version of Node. Used nvm instead to install the LTS version, then installed the AI CLI tools through that.
 
 **SSH tunnel port conflict** - Accessing the homelab's Syncthing web UI required SSH port forwarding. Once Syncthing was also installed on Windows, both instances tried to use port 8384. Used `-L 8385:localhost:8384` to forward to a different local port instead.
 
