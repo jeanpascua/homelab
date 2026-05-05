@@ -190,6 +190,20 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 
 ---
 
+## MCP Keyring Auth
+
+The original MCP setup stored the Proxmox password in a plaintext file at `~/.proxmox-pass`. It worked but any process that could read the home directory had the password.
+
+Switched to `keyrings.alt` — a file-based keyring backend for Python. The MCP wrapper script now retrieves the Proxmox password from the keyring at runtime instead of reading a plaintext file. The `.proxmox-pass` file was deleted.
+
+```bash
+python3 -c "import keyring; keyring.set_password('proxmox', 'root@pam', 'yourpassword')"
+```
+
+The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` and passes it to the MCP server at startup. No plaintext credentials anywhere in the filesystem.
+
+---
+
 ## What I Learned
 
 * Provisioning and managing VMs on a bare metal hypervisor
@@ -214,6 +228,8 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 * Generating a self-signed wildcard cert with openssl and installing it as a trusted CA on Windows and Android
 * Automating Docker volume backups with cron, tar inside an alpine container, and SCP to Proxmox
 * How OnlyOffice JWT authentication works and why the header name matters for the Nextcloud integration
+* How to use systemd one-shot services for boot-time infrastructure checks
+* Securing credentials with a file-based keyring instead of plaintext files
 
 ---
 
@@ -262,6 +278,16 @@ Fix:
 * Result: `.ts.net` hostnames resolve via `tailscale0`, everything else goes through Pi-hole
 
 Also bound Pi-hole to `[tailscale-ip]:53` (the Tailscale IP) so `.home` domains and ad blocking work on all Tailscale devices from anywhere, not just the local network.
+
+---
+
+## DNS Boot Check Service
+
+The DNS overhaul fixed split DNS, but there was no guarantee the setup would survive a reboot. systemd-resolved needs to be running, `/etc/resolv.conf` needs to point at the stub listener, and Tailscale needs `accept-dns=true` — all before anything else comes up.
+
+Wrote a boot script (`dns-boot-check.sh`) and wired it into systemd as a one-shot service that runs after `network-online.target` and `tailscaled.service`. The script checks that `/etc/resolv.conf` points at the systemd-resolved stub (and fixes it if not), confirms systemd-resolved is active, sets `tailscale set --accept-dns=true`, and tests that both external DNS and MagicDNS are resolving. Everything logged to `/var/log/dns-boot-check.log`.
+
+The fix part matters — if the symlink is wrong at boot, the script corrects it with `chattr -i` and `ln -sf` before anything tries to use DNS.
 
 ---
 
