@@ -190,49 +190,6 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 
 ---
 
-## MCP Keyring Auth
-
-The original MCP setup stored the Proxmox password in a plaintext file at `~/.proxmox-pass`. It worked but any process that could read the home directory had the password.
-
-Switched to `keyrings.alt` — a file-based keyring backend for Python. The MCP wrapper script now retrieves the Proxmox password from the keyring at runtime instead of reading a plaintext file. The `.proxmox-pass` file was deleted.
-
-```bash
-python3 -c "import keyring; keyring.set_password('proxmox', 'root@pam', 'yourpassword')"
-```
-
-The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` and passes it to the MCP server at startup. No plaintext credentials anywhere in the filesystem.
-
----
-
-## What I Learned
-
-* Provisioning and managing VMs on a bare metal hypervisor
-* How containerization works in practice — isolated services on a single VM
-* How DNS works at the network level, both for blocking and for local resolution
-* How CGNAT works and why port forwarding doesn't work on residential Telus
-* How WireGuard-based VPNs build mesh networks without a central server
-* Diagnosing network issues and finding workarounds when the obvious solution doesn't work
-* Linux administration through SSH on headless servers
-* How to enable hardware virtualization in BIOS
-* Setting up server monitoring with Grafana, Prometheus, and Node Exporter
-* Peer-to-peer file sync with Syncthing across three devices
-* How AI terminal tools work and building persistent context workflows
-* How MCP (Model Context Protocol) works and building a custom server that gives Claude Code control over infrastructure
-* Managing Node versions on Linux with nvm
-* How reverse proxies work and setting up clean internal domains with NPM and Pi-hole
-* Why CGNAT blocks external proxying and how to work around it internally
-* How Proxmox auth breaks behind a reverse proxy and the redirect workaround
-* How Tailscale Split DNS extends local DNS to remote devices without breaking regular internet
-* How systemd-resolved works as a stub listener and why it has to coexist with Pi-hole and Tailscale
-* Resizing a VM disk on Proxmox and extending the filesystem inside the guest with lvextend and resize2fs
-* Generating a self-signed wildcard cert with openssl and installing it as a trusted CA on Windows and Android
-* Automating Docker volume backups with cron, tar inside an alpine container, and SCP to Proxmox
-* How OnlyOffice JWT authentication works and why the header name matters for the Nextcloud integration
-* How to use systemd one-shot services for boot-time infrastructure checks
-* Securing credentials with a file-based keyring instead of plaintext files
-
----
-
 ## VM Resize
 
 Ubuntu Server VM was hitting CPU limits on 2 cores. Resized all three VMs to better use the node's resources:
@@ -312,6 +269,48 @@ Set up a daily backup script that runs at 3am via cron. Uses Docker's alpine ima
 Volumes backed up: `nextcloud_data`, `pihole_data`, `dnsmasq_data`, `nginx-proxy-manager_npm_data`, `nginx-proxy-manager_npm_letsencrypt`.
 
 Passwordless SSH from ubuntu-server to Proxmox using the existing ed25519 key.
+
+---
+
+## MCP Keyring Auth
+
+The original MCP setup stored the Proxmox password in a plaintext file at `~/.proxmox-pass`. It worked but any process that could read the home directory had the password.
+
+Switched to `keyrings.alt` — a file-based keyring backend for Python. The MCP wrapper script now retrieves the Proxmox password from the keyring at runtime instead of reading a plaintext file. The `.proxmox-pass` file was deleted.
+
+```bash
+python3 -c "import keyring; keyring.set_password('proxmox', 'root@pam', 'yourpassword')"
+```
+
+The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` and passes it to the MCP server at startup. No plaintext credentials anywhere in the filesystem.
+
+---
+
+## What I Learned
+
+* Provisioning and managing VMs on a bare metal hypervisor
+* How containerization works in practice — isolated services on a single VM
+* How DNS works at the network level, both for blocking and for local resolution
+* How CGNAT works and why port forwarding doesn't work on residential Telus
+* How WireGuard-based VPNs build mesh networks without a central server
+* Diagnosing network issues and finding workarounds when the obvious solution doesn't work
+* Linux administration through SSH on headless servers
+* How to enable hardware virtualization in BIOS
+* Setting up server monitoring with Grafana, Prometheus, and Node Exporter
+* Peer-to-peer file sync with Syncthing across three devices
+* How AI terminal tools work and building persistent context workflows
+* How MCP (Model Context Protocol) works and building a custom server that gives Claude Code control over infrastructure
+* How reverse proxies work and setting up clean internal domains with NPM and Pi-hole
+* Why CGNAT blocks external proxying and how to work around it internally
+* How Proxmox auth breaks behind a reverse proxy and the redirect workaround
+* How Tailscale Split DNS extends local DNS to remote devices without breaking regular internet
+* How systemd-resolved works as a stub listener and why it has to coexist with Pi-hole and Tailscale
+* Resizing a VM disk on Proxmox and extending the filesystem inside the guest with lvextend and resize2fs
+* Generating a self-signed wildcard cert with openssl and installing it as a trusted CA on Windows and Android
+* Automating Docker volume backups with cron, tar inside an alpine container, and SCP to Proxmox
+* How OnlyOffice JWT authentication works and why the header name matters for the Nextcloud integration
+* How to use systemd one-shot services for boot-time infrastructure checks
+* Securing credentials with a file-based keyring instead of plaintext files
 
 ---
 
