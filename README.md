@@ -57,7 +57,7 @@ Linux admin, Proxmox/KVM, Docker, DNS (Pi-hole, split DNS, systemd-resolved), VP
 * ~~Metasploitable VM for local pentesting~~ (done, actively exploiting with Kali)
 * ~~OnlyOffice document editing in Nextcloud~~ (done)
 * ~~Daily backups to Proxmox~~ (done, 7-day retention)
-* Document TryHackMe rooms done with the Kali VM
+* Deploy SIEM (Wazuh or Splunk) for log aggregation and alerting
 
 ## Full Writeup
 
