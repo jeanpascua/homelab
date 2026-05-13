@@ -4,7 +4,7 @@
 
 I built this to get real hands-on infrastructure experience outside of coursework. The kind you can't get from reading about it.
 
-Lenovo M710q mini-PC, $110 CAD total. Runs Proxmox as the hypervisor with Ubuntu Server, Kali Linux, and Metasploitable VMs. Everything managed over SSH.
+Lenovo M710q mini-PC, $110 CAD total. Runs Proxmox as the hypervisor with a single Ubuntu Server VM. Everything managed over SSH.
 
 ---
 
@@ -21,22 +21,22 @@ The mini-PC has no built-in WiFi. A USB adapter worked at first but kept droppin
 
 ```
 Proxmox VE (Hypervisor, bare metal)
-├── Ubuntu Server VM (4 cores / 8GB RAM / 120GB disk)
-│   ├── Docker
-│   │   ├── Pi-hole               # DNS-level ad blocking + .home resolution
-│   │   ├── Nextcloud             # Self-hosted personal cloud storage
-│   │   ├── OnlyOffice            # Document editing integrated with Nextcloud
-│   │   ├── Portainer             # Docker container management UI
-│   │   ├── Grafana               # Monitoring dashboards
-│   │   ├── Prometheus            # Metrics collection
-│   │   ├── Node Exporter         # System metrics exporter
-│   │   ├── Nginx Proxy Manager   # Internal reverse proxy with .home domains
-│   │   └── Watchtower            # Automated container image updates
-│   ├── Syncthing           # File sync across devices
-│   ├── Homelab MCP         # Custom MCP server — Claude Code controls the homelab
-│   └── Claude Code         # AI terminal assistant
-├── Kali Linux VM           # Cybersecurity practice environment
-└── Metasploitable VM       # Intentionally vulnerable target for local pentesting
+└── Ubuntu Server VM (4 cores / 12GB RAM / 180GB disk)
+    ├── Docker
+    │   ├── Pi-hole               # DNS-level ad blocking + .home resolution
+    │   ├── Nextcloud             # Self-hosted personal cloud storage
+    │   ├── OnlyOffice            # Document editing integrated with Nextcloud
+    │   ├── Portainer             # Docker container management UI
+    │   ├── Grafana               # Monitoring dashboards + Discord alerts
+    │   ├── Prometheus            # Metrics collection
+    │   ├── Node Exporter         # System metrics exporter
+    │   ├── cAdvisor              # Container resource metrics
+    │   ├── Nginx Proxy Manager   # Internal reverse proxy with .home domains
+    │   ├── Watchtower            # Automated container image updates
+    │   └── JobSync               # Job application tracker
+    ├── Syncthing           # File sync across devices
+    ├── Homelab MCP         # Custom MCP server — Claude Code controls the homelab
+    └── Claude Code         # AI terminal assistant
 ```
 
 ---
@@ -47,39 +47,37 @@ Proxmox VE (Hypervisor, bare metal)
 
 Flashed Proxmox onto a USB drive and installed it bare metal on the M710q. Had to enable Intel VT-x in BIOS first so VMs run with hardware acceleration. Proxmox sits on top of Debian and gives you a web UI for managing VMs.
 
-Provisioned three VMs: Ubuntu Server for running services, Kali for security practice, and Metasploitable as a local pentesting target. All three are headless — after initial setup everything is managed over SSH.
+Provisioned one VM: Ubuntu Server for running all services. Headless — after initial setup everything is managed over SSH.
 
 ### Docker on Ubuntu Server
 
-Installed Docker on the Ubuntu VM. Running nine containers:
+Installed Docker on the Ubuntu VM. Running eleven containers:
 
 * **Pi-hole** - DNS sinkhole. Blocks ads and trackers at the network level before they reach any device.
 * **Nextcloud** - self-hosted file storage. Same idea as Google Drive but on my own hardware.
 * **OnlyOffice** - document editing server integrated with Nextcloud. Edit .docx, .xlsx, and .pptx directly in the browser.
 * **Portainer** - web UI for managing containers, images, and volumes.
-* **Grafana** - monitoring dashboards for the server.
+* **Grafana** - monitoring dashboards for the server with Discord alerting.
 * **Prometheus** - metrics collection backend for Grafana.
 * **Node Exporter** - pulls system metrics from the host (CPU, memory, disk, network).
+* **cAdvisor** - pulls per-container resource metrics (CPU, memory, network per container).
 * **Nginx Proxy Manager** - reverse proxy that maps `.home` domains to each container.
 * **Watchtower** - monitors running containers and automatically pulls updated images when they're available. No manual `docker pull` needed.
+* **JobSync** - self-hosted job application tracker running on port 3737.
 
 ### Tailscale VPN
 
-Needed remote access without opening ports. Telus uses CGNAT so port forwarding doesn't work — the public IP on the modem is shared and inbound traffic never reaches your connection. Tailscale was the fix. It creates a WireGuard mesh between all four devices: laptop, phone, Ubuntu VM, Kali VM. Everything can reach each other regardless of what network I'm on. No open ports, no public exposure.
-
-### Kali Linux VM
-
-Second VM for cybersecurity practice. Used alongside TryHackMe rooms. Running tools like Nmap to scan the local network — discovering hosts, open ports, running services. Also set up Metasploitable as a local target to practice exploiting with Metasploit without touching anything outside my own network.
+Needed remote access without opening ports. Telus uses CGNAT so port forwarding doesn't work — the public IP on the modem is shared and inbound traffic never reaches your connection. Tailscale was the fix. It creates a WireGuard mesh between all three devices: laptop, phone, Ubuntu VM. Everything can reach each other regardless of what network I'm on. No open ports, no public exposure.
 
 ### Monitoring
 
-Wanted visibility into what the server was actually doing. Set up Grafana, Prometheus, and Node Exporter as a stack through Portainer. Node Exporter pulls system metrics, Prometheus collects them, Grafana displays them.
+Wanted visibility into what the server was actually doing. Set up Grafana, Prometheus, Node Exporter, and cAdvisor as a stack through Portainer. Node Exporter pulls system metrics, cAdvisor pulls per-container metrics, Prometheus collects them all, Grafana displays them.
 
-Prometheus runs with a config file that tells it to scrape metrics from Node Exporter every 15 seconds. Grafana connects to Prometheus as a data source, then displays everything on a dashboard.
+Prometheus runs with a config file that tells it to scrape metrics from Node Exporter and cAdvisor every 15 seconds. Grafana connects to Prometheus as a data source, then displays everything on dashboards.
 
 The dashboard was the annoying part. Grafana has a community dashboard library you can import by ID — 1860 is the standard Node Exporter one. But Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON separately and import it via the Grafana API instead.
 
-Once that was sorted, live CPU, memory, disk, and network data showing up on the dashboard.
+Also set up Grafana alerting — fires a Discord notification if any container stops being scraped for more than 60 seconds. Also set up a watchdog script on the Proxmox host that pings the Ubuntu VM every minute and sends a Discord alert if it goes down or recovers.
 
 ### Nginx Proxy Manager and Internal DNS
 
@@ -192,15 +190,13 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 
 ## VM Resize
 
-Ubuntu Server VM was hitting CPU limits on 2 cores. Resized all three VMs to better use the node's resources:
+Ubuntu Server VM was hitting CPU limits on 2 cores. Resized and later expanded the VM to fully use the node's resources:
 
-| VM | Before | After |
+| VM | Original | Current |
 |---|---|---|
-| Ubuntu Server | 2 cores / 6GB / 80GB | 4 cores / 8GB / 120GB |
-| Kali Linux | 2 cores / 4GB / 50GB | 2 cores / 4GB / 60GB |
-| Metasploitable | 1 core / 512MB / 16GB | 1 core / 1GB / 20GB |
+| Ubuntu Server | 2 cores / 6GB / 80GB | 4 cores / 12GB / 180GB |
 
-Used `pvesh` to update CPU and RAM config, `qm resize` for disk, then extended the Ubuntu filesystem inside the guest with `lvextend` and `resize2fs`.
+Used `pvesh` to update CPU and RAM config, `qm resize` for disk, then extended the Ubuntu filesystem inside the guest with `growpart`, `pvresize`, `lvextend`, and `resize2fs`.
 
 ---
 
@@ -262,13 +258,11 @@ Uploaded to NPM as a custom certificate, applied to each proxy host with Force S
 
 ---
 
-## Daily Backups to Proxmox
+## Backups
 
-Set up a daily backup script that runs at 3am via cron. Uses Docker's alpine image to tar each volume, then SCP to Proxmox. Keeps 7 days of history and cleans up automatically.
+Set up a daily backup job in Proxmox VE that runs at 3am. Backs up VM 100 (Ubuntu Server) using vzdump with zstd compression, stored on local Proxmox storage. Keeps the last 1 backup. Configured via `/etc/pve/jobs.cfg`.
 
-Volumes backed up: `nextcloud_data`, `pihole_data`, `dnsmasq_data`, `nginx-proxy-manager_npm_data`, `nginx-proxy-manager_npm_letsencrypt`.
-
-Passwordless SSH from ubuntu-server to Proxmox using the existing ed25519 key.
+Previously had a Docker volume backup script via cron + SCP. Switched to native Proxmox VE backups — simpler, covers the whole VM, no dependency on the VM being healthy to run.
 
 ---
 
@@ -296,7 +290,8 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * Diagnosing network issues and finding workarounds when the obvious solution doesn't work
 * Linux administration through SSH on headless servers
 * How to enable hardware virtualization in BIOS
-* Setting up server monitoring with Grafana, Prometheus, and Node Exporter
+* Setting up server monitoring with Grafana, Prometheus, Node Exporter, and cAdvisor
+* Grafana alerting with Discord webhooks — alerting when containers go down
 * Peer-to-peer file sync with Syncthing across three devices
 * How AI terminal tools work and building persistent context workflows
 * How MCP (Model Context Protocol) works and building a custom server that gives Claude Code control over infrastructure
@@ -305,9 +300,9 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * How Proxmox auth breaks behind a reverse proxy and the redirect workaround
 * How Tailscale Split DNS extends local DNS to remote devices without breaking regular internet
 * How systemd-resolved works as a stub listener and why it has to coexist with Pi-hole and Tailscale
-* Resizing a VM disk on Proxmox and extending the filesystem inside the guest with lvextend and resize2fs
+* Resizing a VM disk on Proxmox and extending the filesystem inside the guest with growpart, pvresize, lvextend, and resize2fs
 * Generating a self-signed wildcard cert with openssl and installing it as a trusted CA on Windows and Android
-* Automating Docker volume backups with cron, tar inside an alpine container, and SCP to Proxmox
+* How Proxmox VE native backups work (vzdump, zstd, retention policies via jobs.cfg)
 * How OnlyOffice JWT authentication works and why the header name matters for the Nextcloud integration
 * How to use systemd one-shot services for boot-time infrastructure checks
 * Securing credentials with a file-based keyring instead of plaintext files
@@ -319,7 +314,7 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
 * ~~Nginx Proxy Manager internally~~ — done, all services on `.home` domains with HTTPS
 * ~~Watchtower for automated container updates~~ — done, running
-* ~~Metasploitable VM for local pentesting~~ — done, actively exploiting with Kali
+* ~~Metasploitable VM for local pentesting~~ — removed, VMs deleted to reclaim resources
 * ~~OnlyOffice document editing in Nextcloud~~ — done
-* ~~Daily backups to Proxmox~~ — done, 7-day retention
-* Document TryHackMe rooms done with the Kali VM
+* ~~Daily backups to Proxmox~~ — done, Proxmox VE native backup, keep last 1
+* Deploy SIEM (Wazuh or Splunk) for log aggregation and alerting
