@@ -1,0 +1,8 @@
+# Local-only artifacts — never commit
+certs/
+*.crt
+*.key
+*.pem
+.lean-ctx/
+backup.log
+.env
