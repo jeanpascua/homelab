@@ -266,6 +266,62 @@ Previously had a Docker volume backup script via cron + SCP. Switched to native 
 
 ---
 
+## Security Hardening
+
+The homelab worked but the security posture was thin. Same password reused across four services. SSH password auth still on. No 2FA anywhere. No password manager. Spent a session cleaning all of it.
+
+### Bitwarden as the Source of Truth
+
+All homelab credentials moved to Bitwarden. Created a Homelab folder with separate vault items for each service: Grafana, NPM, Nextcloud, Portainer, Proxmox, plus secure notes for the Discord webhook URL and SSH key inventory.
+
+Installed the `bw` CLI on the Ubuntu server via snap (not npm — the npm package got hit by a supply chain attack in April 2026):
+
+```bash
+sudo snap install bw
+bw login jean.pascua@protonmail.com
+```
+
+### Password Rotation
+
+The same password was on Grafana, NPM, Nextcloud, and Portainer. One leak compromises all four. Generated unique 20-char random passwords in Bitwarden, rotated each service in turn, saved the new password to the vault entry. Proxmox got a fresh password too even though it wasn't reused. Old shared password is dead everywhere.
+
+### SSH Key Auth + Hardening
+
+The Ubuntu server had `authorized_keys` empty so SSH was password-only. Copied the Windows desktop's ed25519 public key into `/home/jean/.ssh/authorized_keys` on the server and the Proxmox host's `/root/.ssh/authorized_keys`. Tested key login worked from a new shell before locking anything down.
+
+Then disabled password auth on both hosts. Ubuntu's `50-cloud-init.conf` drop-in was silently overriding the default — set `PasswordAuthentication no` there. On Proxmox, created `/etc/ssh/sshd_config.d/99-hardening.conf` with `PasswordAuthentication no` and `PermitRootLogin prohibit-password` (Proxmox needs root key access for some internal operations, so `no` would break things — `prohibit-password` is the right answer).
+
+Validated config with `sshd -t` before every reload. Kept the existing SSH session open during the change in case the new config broke logins.
+
+Installed `fail2ban` on both hosts with the default sshd jail. Bans IPs after 5 failed attempts for 10 minutes.
+
+### 2FA via Aegis
+
+Bitwarden's free tier doesn't include a TOTP generator. Installed Aegis (open source, Android) for code generation. Scoped 2FA to Proxmox root@pam — highest-value target since root on the hypervisor controls every VM.
+
+Grafana OSS, NPM CE, and Portainer CE all dropped native 2FA in current versions (moved to paid Business Edition or never had it). Deferred those to a future Authelia setup — a single auth proxy can add 2FA in front of all three at once.
+
+### Secrets Bootstrap Script
+
+The Discord webhook URL was hardcoded in `/etc/homelab-alerts.env` on the Proxmox host. Wrote `~/bin/sync-secrets.sh` to pull the URL from Bitwarden and write it out:
+
+```bash
+bw unlock
+export BW_SESSION="..."
+~/bin/sync-secrets.sh
+```
+
+The script verifies the session is unlocked, syncs the vault, fetches the webhook URL from the `discord-webhook-homelab` secure note, and writes it to `/etc/homelab-alerts.env` on the Proxmox host with mode 600. Now rotating the webhook is one vault edit plus one script run instead of hunting for hardcoded values across files.
+
+### What's Still Missing
+
+* Backups are still keep-last-1 on a single disk — no 3-2-1 yet
+* Grafana, NPM, Portainer have no 2FA (waiting on Authelia)
+* SSH keys are still plaintext on disk (no passphrase)
+* No SIEM or centralized logging — wouldn't know if something got in
+
+---
+
 ## MCP Keyring Auth
 
 The original MCP setup stored the Proxmox password in a plaintext file at `~/.proxmox-pass`. It worked but any process that could read the home directory had the password.
@@ -306,6 +362,10 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * How OnlyOffice JWT authentication works and why the header name matters for the Nextcloud integration
 * How to use systemd one-shot services for boot-time infrastructure checks
 * Securing credentials with a file-based keyring instead of plaintext files
+* Building a password rotation workflow with Bitwarden CLI and a bootstrap script that writes runtime env files from the vault
+* Hardening SSH with key-only auth, drop-in configs, `sshd -t` validation, and fail2ban
+* Spotting an Ubuntu cloud-init drop-in silently overriding the main sshd_config
+* TOTP 2FA on Proxmox with Aegis
 
 ---
 
@@ -317,4 +377,9 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * ~~Metasploitable VM for local pentesting~~ — removed, VMs deleted to reclaim resources
 * ~~OnlyOffice document editing in Nextcloud~~ — done
 * ~~Daily backups to Proxmox~~ — done, Proxmox VE native backup, keep last 1
+* ~~Password manager + rotation~~ — done, Bitwarden vault with bootstrap script
+* ~~SSH hardening~~ — done, key-only auth + fail2ban on both hosts
+* ~~2FA on Proxmox~~ — done, TOTP via Aegis
+* Authelia in front of Grafana, NPM, and Portainer for 2FA on services that don't support it natively
+* Backup 3-2-1 — second copy on a different disk plus an offsite copy
 * Deploy SIEM (Wazuh or Splunk) for log aggregation and alerting

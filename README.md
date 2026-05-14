@@ -45,6 +45,14 @@ Tailscale VPN mesh across three devices: laptop, phone, Ubuntu VM. Telus uses CG
 
 Daily automated Proxmox VE backup of the Ubuntu VM at 3am. Compressed with zstd, stored on local Proxmox storage. Keeps last 1 backup.
 
+## Security
+
+* Bitwarden vault holds all homelab credentials. `bw` CLI on the server pulls secrets into env files for scripts.
+* SSH is key-only on the Ubuntu server and Proxmox host. Password auth disabled. Root SSH on Proxmox restricted to key auth (`prohibit-password`).
+* fail2ban watches sshd on both hosts.
+* Proxmox root has TOTP 2FA via Aegis.
+* Tailscale-only remote access. CGNAT means no inbound exposure to the internet.
+
 ## What I've Learned From This
 
 Linux admin, Proxmox/KVM, Docker, DNS (Pi-hole, split DNS, systemd-resolved), VPN (Tailscale/WireGuard), SSH, reverse proxy (Nginx Proxy Manager), Grafana/Prometheus/cAdvisor monitoring, Discord alerting, Syncthing, Claude Code + MCP, SSL/TLS, LVM disk management
@@ -57,6 +65,11 @@ Linux admin, Proxmox/KVM, Docker, DNS (Pi-hole, split DNS, systemd-resolved), VP
 * ~~Metasploitable VM for local pentesting~~ (removed — VMs deleted to reclaim resources)
 * ~~OnlyOffice document editing in Nextcloud~~ (done)
 * ~~Daily backups to Proxmox~~ (done, Proxmox VE native backup, keep last 1)
+* ~~Password manager + secret rotation~~ (done, Bitwarden vault + bootstrap script)
+* ~~SSH hardening~~ (done, key-only auth + fail2ban on .79 and .76)
+* ~~2FA on Proxmox~~ (done, TOTP via Aegis)
+* Authelia in front of Grafana, NPM, and Portainer for 2FA on services that don't support it natively
+* Backup 3-2-1 — second copy on a different disk plus an offsite copy
 * Deploy SIEM (Wazuh or Splunk) for log aggregation and alerting
 
 ## Full Writeup
