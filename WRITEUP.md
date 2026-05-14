@@ -4,7 +4,7 @@
 
 I built this to get real hands-on infrastructure experience outside of coursework. The kind you can't get from reading about it.
 
-Lenovo M710q mini-PC, $110 CAD total. Runs Proxmox as the hypervisor with a single Ubuntu Server VM. Everything managed over SSH.
+Lenovo M710q mini-PC, $110 CAD total. Runs Proxmox as the hypervisor with an Ubuntu Server VM hosting the full Docker stack. Everything managed over SSH.
 
 ---
 
@@ -21,22 +21,20 @@ The mini-PC has no built-in WiFi. A USB adapter worked at first but kept droppin
 
 ```
 Proxmox VE (Hypervisor, bare metal)
-└── Ubuntu Server VM (4 cores / 12GB RAM / 180GB disk)
-    ├── Docker
-    │   ├── Pi-hole               # DNS-level ad blocking + .home resolution
-    │   ├── Nextcloud             # Self-hosted personal cloud storage
-    │   ├── OnlyOffice            # Document editing integrated with Nextcloud
-    │   ├── Portainer             # Docker container management UI
-    │   ├── Grafana               # Monitoring dashboards + Discord alerts
-    │   ├── Prometheus            # Metrics collection
-    │   ├── Node Exporter         # System metrics exporter
-    │   ├── cAdvisor              # Container resource metrics
-    │   ├── Nginx Proxy Manager   # Internal reverse proxy with .home domains
-    │   ├── Watchtower            # Automated container image updates
-    │   └── JobSync               # Job application tracker
-    ├── Syncthing           # File sync across devices
-    ├── Homelab MCP         # Custom MCP server — Claude Code controls the homelab
-    └── Claude Code         # AI terminal assistant
+├── Ubuntu Server VM (4 cores / 8GB RAM / 120GB disk)
+│   ├── Docker
+│   │   ├── Pi-hole               # DNS-level ad blocking + .home resolution
+│   │   ├── Nextcloud             # Self-hosted personal cloud storage
+│   │   ├── OnlyOffice            # Document editing integrated with Nextcloud
+│   │   ├── Portainer             # Docker container management UI
+│   │   ├── Grafana               # Monitoring dashboards
+│   │   ├── Prometheus            # Metrics collection
+│   │   ├── Node Exporter         # System metrics exporter
+│   │   ├── Nginx Proxy Manager   # Internal reverse proxy with .home domains
+│   │   └── Watchtower            # Automated container image updates
+│   ├── Syncthing           # File sync across devices
+│   ├── Homelab MCP         # Custom MCP server — Claude Code controls the homelab
+│   └── Claude Code         # AI terminal assistant
 ```
 
 ---
@@ -47,37 +45,35 @@ Proxmox VE (Hypervisor, bare metal)
 
 Flashed Proxmox onto a USB drive and installed it bare metal on the M710q. Had to enable Intel VT-x in BIOS first so VMs run with hardware acceleration. Proxmox sits on top of Debian and gives you a web UI for managing VMs.
 
-Provisioned one VM: Ubuntu Server for running all services. Headless — after initial setup everything is managed over SSH.
+Provisioned an Ubuntu Server VM for running services. Headless — after initial setup everything is managed over SSH.
 
 ### Docker on Ubuntu Server
 
-Installed Docker on the Ubuntu VM. Running eleven containers:
+Installed Docker on the Ubuntu VM. Running nine containers:
 
 * **Pi-hole** - DNS sinkhole. Blocks ads and trackers at the network level before they reach any device.
 * **Nextcloud** - self-hosted file storage. Same idea as Google Drive but on my own hardware.
 * **OnlyOffice** - document editing server integrated with Nextcloud. Edit .docx, .xlsx, and .pptx directly in the browser.
 * **Portainer** - web UI for managing containers, images, and volumes.
-* **Grafana** - monitoring dashboards for the server with Discord alerting.
+* **Grafana** - monitoring dashboards for the server.
 * **Prometheus** - metrics collection backend for Grafana.
 * **Node Exporter** - pulls system metrics from the host (CPU, memory, disk, network).
-* **cAdvisor** - pulls per-container resource metrics (CPU, memory, network per container).
 * **Nginx Proxy Manager** - reverse proxy that maps `.home` domains to each container.
 * **Watchtower** - monitors running containers and automatically pulls updated images when they're available. No manual `docker pull` needed.
-* **JobSync** - self-hosted job application tracker running on port 3737.
 
 ### Tailscale VPN
 
-Needed remote access without opening ports. Telus uses CGNAT so port forwarding doesn't work — the public IP on the modem is shared and inbound traffic never reaches your connection. Tailscale was the fix. It creates a WireGuard mesh between all three devices: laptop, phone, Ubuntu VM. Everything can reach each other regardless of what network I'm on. No open ports, no public exposure.
+Needed remote access without opening ports. Telus uses CGNAT so port forwarding doesn't work — the public IP on the modem is shared and inbound traffic never reaches your connection. Tailscale was the fix. It creates a WireGuard mesh between the laptop, phone, and Ubuntu VM. Everything can reach each other regardless of what network I'm on. No open ports, no public exposure.
 
 ### Monitoring
 
-Wanted visibility into what the server was actually doing. Set up Grafana, Prometheus, Node Exporter, and cAdvisor as a stack through Portainer. Node Exporter pulls system metrics, cAdvisor pulls per-container metrics, Prometheus collects them all, Grafana displays them.
+Wanted visibility into what the server was actually doing. Set up Grafana, Prometheus, and Node Exporter as a stack through Portainer. Node Exporter pulls system metrics, Prometheus collects them, Grafana displays them.
 
-Prometheus runs with a config file that tells it to scrape metrics from Node Exporter and cAdvisor every 15 seconds. Grafana connects to Prometheus as a data source, then displays everything on dashboards.
+Prometheus runs with a config file that tells it to scrape metrics from Node Exporter every 15 seconds. Grafana connects to Prometheus as a data source, then displays everything on a dashboard.
 
 The dashboard was the annoying part. Grafana has a community dashboard library you can import by ID — 1860 is the standard Node Exporter one. But Grafana couldn't reach grafana.com from inside the container to download it. Had to download the JSON separately and import it via the Grafana API instead.
 
-Also set up Grafana alerting — fires a Discord notification if any container stops being scraped for more than 60 seconds. Also set up a watchdog script on the Proxmox host that pings the Ubuntu VM every minute and sends a Discord alert if it goes down or recovers.
+Once that was sorted, live CPU, memory, disk, and network data showing up on the dashboard.
 
 ### Nginx Proxy Manager and Internal DNS
 
@@ -190,13 +186,13 @@ The practical result: I can ask Claude to check if a container is down, deploy a
 
 ## VM Resize
 
-Ubuntu Server VM was hitting CPU limits on 2 cores. Resized and later expanded the VM to fully use the node's resources:
+Ubuntu Server VM was hitting CPU limits on 2 cores. Resized the VM to better use the node's resources:
 
-| VM | Original | Current |
+| VM | Before | After |
 |---|---|---|
-| Ubuntu Server | 2 cores / 6GB / 80GB | 4 cores / 12GB / 180GB |
+| Ubuntu Server | 2 cores / 6GB / 80GB | 4 cores / 8GB / 120GB |
 
-Used `pvesh` to update CPU and RAM config, `qm resize` for disk, then extended the Ubuntu filesystem inside the guest with `growpart`, `pvresize`, `lvextend`, and `resize2fs`.
+Used `pvesh` to update CPU and RAM config, `qm resize` for disk, then extended the Ubuntu filesystem inside the guest with `lvextend` and `resize2fs`.
 
 ---
 
@@ -258,67 +254,13 @@ Uploaded to NPM as a custom certificate, applied to each proxy host with Force S
 
 ---
 
-## Backups
+## Daily Backups to Proxmox
 
-Set up a daily backup job in Proxmox VE that runs at 3am. Backs up VM 100 (Ubuntu Server) using vzdump with zstd compression, stored on local Proxmox storage. Keeps the last 1 backup. Configured via `/etc/pve/jobs.cfg`.
+Set up a daily backup script that runs at 3am via cron. Uses Docker's alpine image to tar each volume, then SCP to Proxmox. Keeps 7 days of history and cleans up automatically.
 
-Previously had a Docker volume backup script via cron + SCP. Switched to native Proxmox VE backups — simpler, covers the whole VM, no dependency on the VM being healthy to run.
+Volumes backed up: `nextcloud_data`, `pihole_data`, `dnsmasq_data`, `nginx-proxy-manager_npm_data`, `nginx-proxy-manager_npm_letsencrypt`.
 
----
-
-## Security Hardening
-
-The homelab worked but the security posture was thin. Same password reused across four services. SSH password auth still on. No 2FA anywhere. No password manager. Spent a session cleaning all of it.
-
-### Bitwarden as the Source of Truth
-
-All homelab credentials moved to Bitwarden. Created a Homelab folder with separate vault items for each service: Grafana, NPM, Nextcloud, Portainer, Proxmox, plus secure notes for the Discord webhook URL and SSH key inventory.
-
-Installed the `bw` CLI on the Ubuntu server via snap (not npm — the npm package got hit by a supply chain attack in April 2026):
-
-```bash
-sudo snap install bw
-bw login jean.pascua@protonmail.com
-```
-
-### Password Rotation
-
-The same password was on Grafana, NPM, Nextcloud, and Portainer. One leak compromises all four. Generated unique 20-char random passwords in Bitwarden, rotated each service in turn, saved the new password to the vault entry. Proxmox got a fresh password too even though it wasn't reused. Old shared password is dead everywhere.
-
-### SSH Key Auth + Hardening
-
-The Ubuntu server had `authorized_keys` empty so SSH was password-only. Copied the Windows desktop's ed25519 public key into `/home/jean/.ssh/authorized_keys` on the server and the Proxmox host's `/root/.ssh/authorized_keys`. Tested key login worked from a new shell before locking anything down.
-
-Then disabled password auth on both hosts. Ubuntu's `50-cloud-init.conf` drop-in was silently overriding the default — set `PasswordAuthentication no` there. On Proxmox, created `/etc/ssh/sshd_config.d/99-hardening.conf` with `PasswordAuthentication no` and `PermitRootLogin prohibit-password` (Proxmox needs root key access for some internal operations, so `no` would break things — `prohibit-password` is the right answer).
-
-Validated config with `sshd -t` before every reload. Kept the existing SSH session open during the change in case the new config broke logins.
-
-Installed `fail2ban` on both hosts with the default sshd jail. Bans IPs after 5 failed attempts for 10 minutes.
-
-### 2FA via Aegis
-
-Bitwarden's free tier doesn't include a TOTP generator. Installed Aegis (open source, Android) for code generation. Scoped 2FA to Proxmox root@pam — highest-value target since root on the hypervisor controls every VM.
-
-Grafana OSS, NPM CE, and Portainer CE all dropped native 2FA in current versions (moved to paid Business Edition or never had it). Deferred those to a future Authelia setup — a single auth proxy can add 2FA in front of all three at once.
-
-### Secrets Bootstrap Script
-
-The Discord webhook URL was hardcoded in `/etc/homelab-alerts.env` on the Proxmox host. Wrote `~/bin/sync-secrets.sh` to pull the URL from Bitwarden and write it out:
-
-```bash
-bw unlock
-export BW_SESSION="..."
-~/bin/sync-secrets.sh
-```
-
-The script verifies the session is unlocked, syncs the vault, fetches the webhook URL from the `discord-webhook-homelab` secure note, and writes it to `/etc/homelab-alerts.env` on the Proxmox host with mode 600. Now rotating the webhook is one vault edit plus one script run instead of hunting for hardcoded values across files.
-
-### What's Still Missing
-
-* Backups are still keep-last-1 on a single disk — no 3-2-1 yet
-* Grafana, NPM, Portainer have no 2FA (waiting on Authelia)
-* SSH keys are still plaintext on disk (no passphrase)
-* No SIEM or centralized logging — wouldn't know if something got in
+Passwordless SSH from ubuntu-server to Proxmox using the existing ed25519 key.
 
 ---
 
@@ -346,8 +288,7 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * Diagnosing network issues and finding workarounds when the obvious solution doesn't work
 * Linux administration through SSH on headless servers
 * How to enable hardware virtualization in BIOS
-* Setting up server monitoring with Grafana, Prometheus, Node Exporter, and cAdvisor
-* Grafana alerting with Discord webhooks — alerting when containers go down
+* Setting up server monitoring with Grafana, Prometheus, and Node Exporter
 * Peer-to-peer file sync with Syncthing across three devices
 * How AI terminal tools work and building persistent context workflows
 * How MCP (Model Context Protocol) works and building a custom server that gives Claude Code control over infrastructure
@@ -356,16 +297,12 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * How Proxmox auth breaks behind a reverse proxy and the redirect workaround
 * How Tailscale Split DNS extends local DNS to remote devices without breaking regular internet
 * How systemd-resolved works as a stub listener and why it has to coexist with Pi-hole and Tailscale
-* Resizing a VM disk on Proxmox and extending the filesystem inside the guest with growpart, pvresize, lvextend, and resize2fs
+* Resizing a VM disk on Proxmox and extending the filesystem inside the guest with lvextend and resize2fs
 * Generating a self-signed wildcard cert with openssl and installing it as a trusted CA on Windows and Android
-* How Proxmox VE native backups work (vzdump, zstd, retention policies via jobs.cfg)
+* Automating Docker volume backups with cron, tar inside an alpine container, and SCP to Proxmox
 * How OnlyOffice JWT authentication works and why the header name matters for the Nextcloud integration
 * How to use systemd one-shot services for boot-time infrastructure checks
 * Securing credentials with a file-based keyring instead of plaintext files
-* Building a password rotation workflow with Bitwarden CLI and a bootstrap script that writes runtime env files from the vault
-* Hardening SSH with key-only auth, drop-in configs, `sshd -t` validation, and fail2ban
-* Spotting an Ubuntu cloud-init drop-in silently overriding the main sshd_config
-* TOTP 2FA on Proxmox with Aegis
 
 ---
 
@@ -374,12 +311,7 @@ The wrapper script reads it with `keyring.get_password('proxmox', 'root@pam')` a
 * ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
 * ~~Nginx Proxy Manager internally~~ — done, all services on `.home` domains with HTTPS
 * ~~Watchtower for automated container updates~~ — done, running
-* ~~Metasploitable VM for local pentesting~~ — removed, VMs deleted to reclaim resources
 * ~~OnlyOffice document editing in Nextcloud~~ — done
-* ~~Daily backups to Proxmox~~ — done, Proxmox VE native backup, keep last 1
-* ~~Password manager + rotation~~ — done, Bitwarden vault with bootstrap script
-* ~~SSH hardening~~ — done, key-only auth + fail2ban on both hosts
-* ~~2FA on Proxmox~~ — done, TOTP via Aegis
-* Authelia in front of Grafana, NPM, and Portainer for 2FA on services that don't support it natively
-* Backup 3-2-1 — second copy on a different disk plus an offsite copy
-* Deploy SIEM (Wazuh or Splunk) for log aggregation and alerting
+* ~~Daily backups to Proxmox~~ — done, 7-day retention
+* Terraform/Ansible IaC layer to codify the current setup
+* Add a second Proxmox node for HA Docker workloads
