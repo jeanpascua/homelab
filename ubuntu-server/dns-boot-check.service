@@ -1,0 +1,12 @@
+[Unit]
+Description=DNS boot check and fix
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/jean/homelab/ubuntu-server/dns-boot-check.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
