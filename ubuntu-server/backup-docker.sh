@@ -45,17 +45,28 @@ for VOL in "${VOLUMES[@]}"; do
     log "ERROR: failed to transfer $VOL: $SCP_ERR"
     ERRORS+=("$VOL")
   fi
-  rm -f "$TMPDIR/${VOL}_${DATE}.tar.gz"
 done
 
 CLEAN_ERR=$(ssh root@192.168.1.76 "find /backups/ubuntu-server -name '*.tar.gz' -mtime +${KEEP_DAYS} -delete" 2>&1)
 if [ -n "$CLEAN_ERR" ]; then
   log "WARN cleanup stderr: $CLEAN_ERR"
 fi
-log "Old backups cleaned up"
+log "Old backups cleaned up (.76)"
+
+# Sync today's backups to R2
+RCLONE_OUT=$(rclone copy "$TMPDIR" r2:homelab-backups 2>&1)
+if [ $? -eq 0 ]; then
+  log "R2 sync OK"
+  rclone delete r2:homelab-backups --min-age $((KEEP_DAYS + 1))d >> "$LOG" 2>&1 || true
+else
+  log "ERROR: R2 sync failed: $RCLONE_OUT"
+  ERRORS+=("r2-sync")
+fi
+
+rm -rf "$TMPDIR"
 log "Backup complete"
 
-# Discord alert if any failures.
+# Discord alert if any failures
 if [ ${#ERRORS[@]} -gt 0 ] && [ -f "$WEBHOOK_FILE" ]; then
   WEBHOOK=$(head -c 500 "$WEBHOOK_FILE" | tr -d '\n\r ')
   if [ -n "$WEBHOOK" ]; then
