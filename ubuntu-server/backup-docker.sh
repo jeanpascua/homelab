@@ -70,7 +70,7 @@ log "Backup complete"
 if [ ${#ERRORS[@]} -gt 0 ] && [ -f "$WEBHOOK_FILE" ]; then
   WEBHOOK=$(head -c 500 "$WEBHOOK_FILE" | tr -d '\n\r ')
   if [ -n "$WEBHOOK" ]; then
-    MSG="🔴 backup-docker ($DATE) failed on ${#ERRORS[@]}/${#VOLUMES[@]} volumes: ${ERRORS[*]}. Log: $LOG"
+    MSG="🔴 **backup-docker** ($DATE) failed on ${#ERRORS[@]}/${#VOLUMES[@]} volumes: ${ERRORS[*]}. Log: $LOG"
     ESCAPED=$(printf '%s' "$MSG" | jq -Rs .)
     curl -fsS -X POST "$WEBHOOK" -H 'Content-Type: application/json' \
       --data "{\"content\":$ESCAPED}" >/dev/null 2>&1 || true

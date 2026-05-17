@@ -33,9 +33,9 @@ esac
 if [ "$EVENT" = "BAN" ]; then
   MSG="${ICON} fail2ban [${JAIL}] **BAN** ${IP} on \`${HOST}\` (failures: ${FAILURES}) — ${NOW}"
 elif [ "$EVENT" = "UNBAN" ]; then
-  MSG="${ICON} fail2ban [${JAIL}] unban ${IP} on \`${HOST}\` — ${NOW}"
+  MSG="${ICON} fail2ban [${JAIL}] **UNBAN** ${IP} on \`${HOST}\` — ${NOW}"
 else
-  MSG="${ICON} fail2ban ${EVENT} on \`${HOST}\` — ${NOW}"
+  MSG="${ICON} fail2ban **${EVENT}** on \`${HOST}\` — ${NOW}"
 fi
 
 JSON=$(MSG="$MSG" python3 -c 'import json,os; print(json.dumps({"content":os.environ["MSG"]}))')
