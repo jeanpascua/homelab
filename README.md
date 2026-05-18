@@ -47,21 +47,9 @@ Nginx Proxy Manager runs as a reverse proxy with Pi-hole handling local DNS. All
 
 Tailscale VPN mesh across laptop, phone, and the Ubuntu VM. Telus uses CGNAT so port forwarding isn't an option. Tailscale creates a WireGuard mesh instead. No open ports, no public exposure. Pi-hole is bound to the Tailscale IP so `.home` domains and ad blocking work from anywhere.
 
-## Backups
-
-Daily automated backups of all Docker volumes to Proxmox at 3am. Keeps 7 days of history. Volumes backed up: Nextcloud data, Pi-hole config, NPM config and certs.
-
 ## Skills Practiced
 
 Linux administration, virtualization (Proxmox/KVM), containerization (Docker), networking (DNS, VPN, SSH, reverse proxy, Split DNS, systemd-resolved), monitoring and alerting (Grafana, Prometheus, Discord webhooks), file sync (Syncthing), AI terminal tooling (Claude Code), infrastructure automation (custom MCP server, Proxmox API, SSH orchestration), SSL/TLS (self-signed certs, CA installation)
-
-## What's Next
-
-* ~~MCP server integration with Claude Code~~ — done, homelab-mcp v1.6.0
-* ~~Nginx Proxy Manager (internal, over Tailscale)~~ — done, all services on `.home` domains with HTTPS
-* ~~Watchtower for automated container updates~~ — done, running
-* ~~OnlyOffice document editing in Nextcloud~~ — done
-* ~~Daily backups to Proxmox~~ — done, 7-day retention
 
 ## Full Writeup
 
