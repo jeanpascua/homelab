@@ -19,8 +19,12 @@ alert() {
 case "$PHASE" in
     backup-end)
         SIZE="unknown"
-        if [ -n "$TARFILE" ] && [ -f "$TARFILE" ]; then
-            SIZE=$(du -h "$TARFILE" 2>/dev/null | awk '{print $1}')
+        ARCHIVE="${TARFILE:-$TARGET}"
+        if [ -n "$ARCHIVE" ] && [ -f "$ARCHIVE" ]; then
+            SIZE=$(du -h "$ARCHIVE" 2>/dev/null | awk '{print $1}')
+        elif [ -n "$DUMPDIR" ]; then
+            LATEST=$(find "$DUMPDIR" -name "vzdump-*-${VMID}-*.vma*" -newer /proc/1 2>/dev/null | sort | tail -1)
+            [ -n "$LATEST" ] && SIZE=$(du -h "$LATEST" 2>/dev/null | awk '{print $1}')
         fi
         alert "✅ **Proxmox backup OK** — VM ${VMID} on ${HOSTNAME}, size ${SIZE}."
         ;;
