@@ -10,12 +10,10 @@ Proxmox VE (bare metal)
 │   ├── Docker
 │   │   ├── Pi-hole               # Network-wide DNS ad blocking + .home resolution
 │   │   ├── Nextcloud             # Self-hosted personal cloud
-│   │   ├── Portainer             # Container management UI
 │   │   ├── Grafana               # Monitoring dashboards
 │   │   ├── Prometheus            # Metrics collection
 │   │   ├── Node Exporter         # System metrics exporter
-│   │   ├── Nginx Proxy Manager   # Internal reverse proxy with clean .home URLs
-│   │   └── Watchtower            # Automated container image updates
+│   │   └── Nginx Proxy Manager   # Internal reverse proxy with clean .home URLs
 │   ├── Syncthing         # File sync across devices
 │   ├── Homelab MCP       # Custom MCP server — Claude Code controls the homelab
 │   └── Claude Code       # AI terminal assistant
@@ -37,7 +35,6 @@ Nginx Proxy Manager runs as a reverse proxy with Pi-hole handling local DNS. All
 |---|---|
 | `https://nextcloud.home` | Nextcloud |
 | `https://pihole.home` | Pi-hole |
-| `https://portainer.home` | Portainer |
 | `https://grafana.home` | Grafana |
 | `http://[server-ip]:81` | Nginx Proxy Manager |
 | `http://[proxmox-ip]:8006` | Proxmox VE |
