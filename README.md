@@ -10,7 +10,6 @@ Proxmox VE (bare metal)
 │   ├── Docker
 │   │   ├── Pi-hole               # Network-wide DNS ad blocking + .home resolution
 │   │   ├── Nextcloud             # Self-hosted personal cloud
-│   │   ├── OnlyOffice            # Document editing integrated with Nextcloud
 │   │   ├── Portainer             # Container management UI
 │   │   ├── Grafana               # Monitoring dashboards
 │   │   ├── Prometheus            # Metrics collection
