@@ -22,6 +22,14 @@ Proxmox VE (bare metal)
 │   └── Claude Code       # AI terminal assistant
 ```
 
+## Repo Layout
+
+| Path | Contents |
+|------|----------|
+| `proxmox/` | Proxmox host scripts — VM watchdog, vzdump backup hook, fail2ban, journald, PAM configs. See [proxmox/README.md](proxmox/README.md). |
+| `ubuntu-server/` | Ubuntu VM scripts — Docker backup, DNS boot fix, Bitwarden secrets sync, fail2ban, UFW, journald, PAM configs. See [ubuntu-server/README.md](ubuntu-server/README.md). |
+| `WRITEUP.md` | Full setup writeup — decisions, problems, what I learned. |
+
 ## Internal DNS + HTTPS
 
 Nginx Proxy Manager runs as a reverse proxy with Pi-hole handling local DNS. All services are accessible via clean `.home` domains with HTTPS. Pi-hole also runs on the Tailscale IP so `.home` domains resolve away from home too.
